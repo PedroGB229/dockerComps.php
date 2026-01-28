@@ -7,7 +7,7 @@ use app\database\builder\SelectQuery;
 use app\database\builder\InsertQuery;
 use app\database\builder\UpdateQuery;
 
-class cliente extends Base
+class Cliente extends Base
 {
 
     public function lista($request, $response)
@@ -230,17 +230,17 @@ class cliente extends Base
                 'rg_ie' => $form['rg_ie'] ?? null,
                 'data_nascimento_abertura' => $form['data_nascimento_abertura'] ?? null
             ];
-            $IsSave = InsertQuery::table('cliente')->save($FieldsAndValues);
+            $IsSave = InsertQuery::table('customer')->save($FieldsAndValues);
 
             if (!$IsSave) {
-                $data = ['status' => false, 'msg' => 'Erro ao inserir cliente', 'id' => 0];
+                $data = ['status' => false, 'msg' => 'Erro ao inserir customer', 'id' => 0];
                 return $this->SendJson($response, $data, 200);
             }
-            
-            $id = SelectQuery::select('id')->from('cliente')->order('id', 'desc')->fetch();
+
+            $id = SelectQuery::select('id')->from('customer')->order('id', 'desc')->fetch();
             $data = [
                 'status' => true,
-                'msg' => 'Cliente cadastrado com sucesso!',
+                'msg' => 'Customer cadastrado com sucesso!',
                 'id' => $id['id'] ?? 0
             ];
             return $this->SendJson($response, $data, 200);
