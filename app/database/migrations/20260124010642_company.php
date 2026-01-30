@@ -15,6 +15,7 @@ final class Company extends AbstractMigration
             ->addColumn('sobrenome_razao', 'text', ['null' => true])
             ->addColumn('cpf_cnpj', 'text', ['null' => true])
             ->addColumn('rg_ie', 'text', ['null' => true])
+            ->addColumn('data_nascimento_abertura', 'text', ['null' => true])
             ->addColumn('ativo', 'boolean', ['null' => true])
             ->addColumn('data_cadastro', 'datetime', ['null' => true, 'default' => 'CURRENT_TIMESTAMP'])
             ->addColumn('data_atualizacao', 'datetime', ['null' => true, 'default' => 'CURRENT_TIMESTAMP'])

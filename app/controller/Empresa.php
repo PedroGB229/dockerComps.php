@@ -71,15 +71,15 @@ class Empresa extends Base
                 $query->where('company.nome_fantasia', 'ilike', "%{$term}%", 'or')
                     ->where('company.sobrenome_razao', 'ilike', "%{$term}%", 'or')
                     ->where('company.cpf_cnpj', 'ilike', "%{$term}%", 'or')
-                    ->where('company.rg_ie', 'ilike', "%{$term}%", 'or')
-                    ->whereRaw("to_char(company.data_nascimento_abertura, 'YYYY-MM-DD') ILIKE '%{$term}%'");
+                    ->where('company.rg_ie', 'ilike', "%{$term}%")
+                    ->where('company.data_nascimento_abertura', 'ilike', "%{$term}%");
 
                 $queryFiltered = SelectQuery::select('COUNT(*) as total')->from('company')
                     ->where('company.nome_fantasia', 'ilike', "%{$term}%", 'or')
                     ->where('company.sobrenome_razao', 'ilike', "%{$term}%", 'or')
                     ->where('company.cpf_cnpj', 'ilike', "%{$term}%", 'or')
-                    ->where('company.rg_ie', 'ilike', "%{$term}%", 'or')
-                    ->whereRaw("to_char(company.data_nascimento_abertura, 'YYYY-MM-DD') ILIKE '%{$term}%'");
+                    ->where('company.rg_ie', 'ilike', "%{$term}%")
+                    ->where('company.data_nascimento_abertura', 'ilike', "%{$term}%");
                 $totalFiltered = $queryFiltered->fetch()['total'] ?? 0;
             } else {
                 $totalFiltered = $totalRecords;
@@ -133,16 +133,31 @@ class Empresa extends Base
     }
       public function alterar($request, $response, $args)
     {
-        $id = $args['id'];
-        $user = SelectQuery::select()->from('company')->where('id', '=', $id)->fetch();
+        $id = $args['id'] ?? null;
+        
+        // Validar se o ID é válido
+        if (!$id || !is_numeric($id)) {
+            $dadosTemplate = [
+                'acao' => 'c',
+                'id' => '',
+                'titulo' => 'Cadastro e alteracao de empresa',
+                'empresa' => null
+            ];
+            return $this->getTwig()
+                ->render($response, $this->setView('empresa'), $dadosTemplate)
+                ->withHeader('Content-Type', 'text/html')
+                ->withStatus(200);
+        }
+        
+        $empresa = SelectQuery::select()->from('company')->where('id', '=', $id)->fetch();
         $dadosTemplate = [
             'acao' => 'e',
             'id' => $id,
             'titulo' => 'Cadastro e alteracao de empresa',
-            'empresa' => $user
+            'empresa' => $empresa
         ];
         return $this->getTwig()
-            ->render($response, $this->setView('company'), $dadosTemplate)
+            ->render($response, $this->setView('empresa'), $dadosTemplate)
             ->withHeader('Content-Type', 'text/html')
             ->withStatus(200);
     }
@@ -179,7 +194,7 @@ class Empresa extends Base
                 return $this->SendJson($response, $data, 200);
             }
             
-            $data = ['status' => true, 'msg' => 'empresa removida com sucesso!', 'id' => $id];
+            $data = ['status' => true, 'msg' => 'empresa removido com sucesso!', 'id' => $id];
             return $this->SendJson($response, $data, 200);
             
         } catch (\Throwable $th) {
@@ -197,9 +212,7 @@ class Empresa extends Base
                 'sobrenome_razao' => $form['sobrenome_razao'],
                 'cpf_cnpj' => $form['cpf_cnpj'],
                 'rg_ie' => $form['rg_ie'],
-                'ativo' => $form['ativo'],
-                'data_cadastro' => $form['data_cadastro'],
-                'data_atualizacao' => $form['data_atualizacao'] 
+                'data_nascimento_abertura' => $form['data_nascimento_abertura']
             ];
             $IsUpdate = UpdateQuery::table('company')->set($FieldAndValues)->where('id', '=', $id)->update();
             if (!$IsUpdate) {
@@ -230,7 +243,7 @@ class Empresa extends Base
                 'sobrenome_razao' => $form['sobrenome_razao'] ?? null,
                 'cpf_cnpj' => $form['cpf_cnpj'] ?? null,
                 'rg_ie' => $form['rg_ie'] ?? null,
-                'ativo' => $form['ativo'] ?? 1
+                'data_nascimento_abertura' => $form['data_nascimento_abertura'] ?? null
             ];
             $IsSave = InsertQuery::table('company')->save($FieldsAndValues);
 

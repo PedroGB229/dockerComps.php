@@ -1,3 +1,4 @@
+
 {% extends "main.html" %}
 {% block main %}
 <div class="container">
@@ -10,32 +11,33 @@
             </div>
             <div class="col-md-4">
                 <label for="nome_fantasia" class="form-label">Nome Fantasia</label>
-                <input type="text" class="form-control" id="nome_fantasia" name="nome_fantasia" placeholder="Digite seu nome_fantasia." required value="{{ empresa.nome_fantasia }}">
+                <input type="text" class="form-control" id="nome_fantasia" name="nome_fantasia" placeholder="Digite seu nome_fantasia." required value="{{ empresa ? empresa.nome_fantasia : '' }}">
             </div>
             <div class="col-md-4">
                 <label for="sobrenome_razao" class="form-label">Razão Social</label>
                 <input type="text" class="form-control" id="sobrenome_razao" name="sobrenome_razao"
-                placeholder="Por favor digite seu sobrenome_razao" required value="{{ empresa.sobrenome_razao }}">
+                placeholder="Por favor digite seu sobrenome_razao" required value="{{ empresa ? empresa.sobrenome_razao : '' }}">
             </div>
             <div class="col-md-4">
                 <label for="cpf_cnpj" class="form-label">CPF/CNPJ</label>
                 <input type="text" class="form-control" id="cpf_cnpj" name="cpf_cnpj" placeholder="Por favor digite seu cpf_cnpj"
-                required data-rule-cpfOrCnpj="true" value="{{ empresa.cpf_cnpj }}">
+                required data-rule-cpfOrCnpj="true" value="{{ empresa ? empresa.cpf_cnpj : '' }}">
                 <small class="form-text text-muted">Digite um CPF (000.000.000-00) ou CNPJ (00.000.000/0000-00)</small>
             </div>
             <div class="col-md-6">
+                <label for="data_nascimento_abertura" class="form-label">Data de Nascimento/Abertura</label>
+                <input type="date" class="form-control" id="data_nascimento_abertura" name="data_nascimento_abertura"
+                    placeholder="Digite sua data de nascimento" required data-rule-validDate="true" value="{{ empresa ? empresa.data_nascimento_abertura : '' }}">
+                    <div class="invalid-feedback">
+                        Por favor digite uma data válida.
+            </div>
+            </div>
+            <div class="col-md-6">
                 <label for="rg_ie" class="form-label">RG/IE</label>
-                <input type="text" class="form-control" id="rg_ie" name="rg_ie" placeholder="Digite seu rg_ie" required data-rule-rg="true" value="{{ empresa.rg_ie }}">
+                <input type="text" class="form-control" id="rg_ie" name="rg_ie" placeholder="Digite seu rg_ie" required data-rule-rg="true" value="{{ empresa ? empresa.rg_ie : '' }}">
                 <div class="invalid-feedback">
                     RG/IE inválido
                 </div>
-            </div>
-            <div class="col-md-6">
-                <label for="ativo" class="form-label">Ativo</label>
-                <select id="ativo" name="ativo" class="form-control">
-                    <option value="1" {% if empresa.ativo == 1 %}selected{% endif %}>Sim</option>
-                    <option value="0" {% if empresa.ativo == 0 %}selected{% endif %}>Não</option>
-                </select>
             </div>
             <div class="col-12">
                 <button class="btn btn-primary" type="button" id="insert">Salvar</button>

@@ -53,8 +53,7 @@ class Fornecedor extends Base
                 1 => 'nome_fantasia',
                 2 => 'sobrenome_razao',
                 3 => 'cpf_cnpj',
-                4 => 'rg_ie',
-                5 => 'data_cadastro'
+                4 => 'rg_ie'
             ];
             
             #Capturamos o nome do campo a ser ordenado.
@@ -62,7 +61,7 @@ class Fornecedor extends Base
             #O termo pesquisado
             $term = $form['search']['value'] ?? '';
             
-            $query = SelectQuery::select('id,nome_fantasia,sobrenome_razao,cpf_cnpj,rg_ie,data_cadastro')->from('supplier');
+            $query = SelectQuery::select('id,nome_fantasia,sobrenome_razao,cpf_cnpj,rg_ie')->from('supplier');
             
             $queryTotal = SelectQuery::select('COUNT(*) as total')->from('supplier');
             $totalRecords = $queryTotal->fetch()['total'] ?? 0;
@@ -71,15 +70,13 @@ class Fornecedor extends Base
                 $query->where('supplier.nome_fantasia', 'ilike', "%{$term}%", 'or')
                     ->where('supplier.sobrenome_razao', 'ilike', "%{$term}%", 'or')
                     ->where('supplier.cpf_cnpj', 'ilike', "%{$term}%", 'or')
-                    ->where('supplier.rg_ie', 'ilike', "%{$term}%", 'or')
-                    ->whereRaw("to_char(supplier.data_cadastro, 'YYYY-MM-DD') ILIKE '%{$term}%'");
+                    ->where('supplier.rg_ie', 'ilike', "%{$term}%");
 
                 $queryFiltered = SelectQuery::select('COUNT(*) as total')->from('supplier')
                     ->where('supplier.nome_fantasia', 'ilike', "%{$term}%", 'or')
                     ->where('supplier.sobrenome_razao', 'ilike', "%{$term}%", 'or')
                     ->where('supplier.cpf_cnpj', 'ilike', "%{$term}%", 'or')
-                    ->where('supplier.rg_ie', 'ilike', "%{$term}%", 'or')
-                    ->whereRaw("to_char(supplier.data_cadastro, 'YYYY-MM-DD') ILIKE '%{$term}%'");
+                    ->where('supplier.rg_ie', 'ilike', "%{$term}%");
                 $totalFiltered = $queryFiltered->fetch()['total'] ?? 0;
             } else {
                 $totalFiltered = $totalRecords;
@@ -98,7 +95,6 @@ class Fornecedor extends Base
                     $value['sobrenome_razao'],
                     $value['cpf_cnpj'],
                     $value['rg_ie'],
-                    $value['data_cadastro'],
                     "<a href='/fornecedor/alterar/{$value['id']}' class='btn btn-warning'>Editar</a>
                     <button type='button'  onclick='Delete(" . $value['id'] . ");' class='btn btn-danger'>Excluir</button>"
                 ];
@@ -133,13 +129,28 @@ class Fornecedor extends Base
     }
       public function alterar($request, $response, $args)
     {
-        $id = $args['id'];
-        $user = SelectQuery::select()->from('supplier')->where('id', '=', $id)->fetch();
+        $id = $args['id'] ?? null;
+        
+        // Validar se o ID é válido
+        if (!$id || !is_numeric($id)) {
+            $dadosTemplate = [
+                'acao' => 'c',
+                'id' => '',
+                'titulo' => 'Cadastro e alteracao de fornecedor',
+                'fornecedor' => null
+            ];
+            return $this->getTwig()
+                ->render($response, $this->setView('fornecedor'), $dadosTemplate)
+                ->withHeader('Content-Type', 'text/html')
+                ->withStatus(200);
+        }
+        
+        $fornecedor = SelectQuery::select()->from('supplier')->where('id', '=', $id)->fetch();
         $dadosTemplate = [
             'acao' => 'e',
             'id' => $id,
             'titulo' => 'Cadastro e alteracao de fornecedor',
-            'fornecedor' => $user
+            'fornecedor' => $fornecedor
         ];
         return $this->getTwig()
             ->render($response, $this->setView('fornecedor'), $dadosTemplate)
@@ -153,7 +164,7 @@ class Fornecedor extends Base
             
             // Primeiro, deleta registros relacionados em contato
             try {
-                DeleteQuery::table('contact')
+                DeleteQuery::table('contato')
                     ->where('id_supplier', '=', $id)
                     ->delete();
             } catch (\Exception $e) {
@@ -162,7 +173,7 @@ class Fornecedor extends Base
 
             // Depois, deleta registros relacionados em endereco
             try {
-                DeleteQuery::table('address')
+                DeleteQuery::table('endereco')
                     ->where('id_supplier', '=', $id)
                     ->delete();
             } catch (\Exception $e) {
@@ -196,10 +207,7 @@ class Fornecedor extends Base
                 'nome_fantasia' => $form['nome_fantasia'],
                 'sobrenome_razao' => $form['sobrenome_razao'],
                 'cpf_cnpj' => $form['cpf_cnpj'],
-                'rg_ie' => $form['rg_ie'],
-                'ativo' => $form['ativo'],
-                'data_cadastro' => $form['data_cadastro'],
-                'data_atualizacao' => $form['data_atualizacao'] 
+                'rg_ie' => $form['rg_ie']
             ];
             $IsUpdate = UpdateQuery::table('supplier')->set($FieldAndValues)->where('id', '=', $id)->update();
             if (!$IsUpdate) {
@@ -226,11 +234,10 @@ class Fornecedor extends Base
         try {
             $form = $request->getParsedBody();
             $FieldsAndValues = [
-                 'nome_fantasia' => $form['nome_fantasia'] ?? null,
+                'nome_fantasia' => $form['nome_fantasia'] ?? null,
                 'sobrenome_razao' => $form['sobrenome_razao'] ?? null,
                 'cpf_cnpj' => $form['cpf_cnpj'] ?? null,
-                'rg_ie' => $form['rg_ie'] ?? null,
-                'ativo' => $form['ativo'] ?? 1
+                'rg_ie' => $form['rg_ie'] ?? null
             ];
             $IsSave = InsertQuery::table('supplier')->save($FieldsAndValues);
 

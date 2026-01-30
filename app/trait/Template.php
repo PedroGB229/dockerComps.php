@@ -11,7 +11,7 @@ trait Template
         try {
             $twig = Twig::create(DIR_VIEW);
             #Adicionamos uma varaivel de template Global acessivel de qualquer template
-            $twig->getEnvironment()->addGlobal('EMPRESA', 'Gambiarra&CIA');
+            $twig->getEnvironment()->addGlobal('EMPRESA', 'KittySoft');
             return $twig;
         } catch (\Exception $e) {
             throw new \Exception("Restrição: " . $e->getMessage());

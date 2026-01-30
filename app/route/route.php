@@ -1,7 +1,7 @@
 <?php
 
 use app\controller\User;
-use app\controller\Cliente;
+use app\controller\cliente;
 use app\controller\Empresa;
 use app\controller\Home;
 use app\controller\Fornecedor;
@@ -9,7 +9,7 @@ use app\controller\Login;
 use app\middleware\Middleware;
 use Slim\Routing\RouteCollectorProxy;
 
-$app->get('/', Home::class . ':home');
+$app->get('/', Home::class . ':home')->add(Middleware::route());
 $app->get('/home', Home::class . ':home');
 $app->get('/login', Login::class . ':login');
 
@@ -27,33 +27,37 @@ $app->group('/usuario', function (RouteCollectorProxy $group) {
     $group->post('/listuser', User::class . ':listuser');
     $group->post('/update', User::class . ':update');
     $group->post('/insert', User::class . ':insert');
-    $group->get('/alterar/{id}', User::class . ':alterar');
+    $group->get('/alterar/{id}', User::class . ':alterar'); 
     $group->post('/delete', User::class . ':delete');
+    $group->get('/print', User::class . ':print'); 
+});
+$app->group('/pagamento', function (RouteCollectorProxy $group) {
+    $group->get('/lista', PaymentTerms::class . ':lista');
 });
 $app->group('/cliente', function (RouteCollectorProxy $group) {
-    $group->get('/lista', Cliente::class . ':lista');
-    $group->get('/cadastro', Cliente::class . ':cadastro');
-    $group->post('/listcliente', Cliente::class . ':listcliente');
-    $group->post('/update', Cliente::class . ':update');
-    $group->post('/insert', Cliente::class . ':insert');
-    $group->get('/alterar/{id}', Cliente::class . ':alterar');
-    $group->post('/delete', Cliente::class . ':delete');
+    $group->get('/lista', cliente::class . ':lista'); 
+    $group->get('/cadastro', cliente::class . ':cadastro');
+    $group->post('/listcliente', cliente::class . ':listcliente');
+    $group->post('/update', cliente::class . ':update');
+    $group->post('/insert', cliente::class . ':insert');
+    $group->get('/alterar/{id}', cliente::class . ':alterar');
+    $group->post('/delete', cliente::class . ':delete');
 });
 $app->group('/empresa', function (RouteCollectorProxy $group) {
-    $group->get('/lista', Empresa::class . ':lista');
-    $group->get('/cadastro', Empresa::class . ':cadastro');
+    $group->get('/lista', Empresa::class . ':lista'); 
+    $group->get('/cadastro', Empresa::class . ':cadastro'); 
     $group->post('/listempresa', Empresa::class . ':listempresa');
     $group->post('/update', Empresa::class . ':update');
     $group->post('/insert', Empresa::class . ':insert');
-    $group->get('/alterar/{id}', Empresa::class . ':alterar');
+    $group->get('/alterar/{id}', Empresa::class . ':alterar'); 
     $group->post('/delete', Empresa::class . ':delete');
 });
 $app->group('/fornecedor', function (RouteCollectorProxy $group) {
-    $group->get('/lista', Fornecedor::class . ':lista');
-    $group->get('/cadastro', Fornecedor::class . ':cadastro');
+    $group->get('/lista', Fornecedor::class . ':lista'); 
+    $group->get('/cadastro', Fornecedor::class . ':cadastro'); 
     $group->post('/listfornecedor', Fornecedor::class . ':listfornecedor');
     $group->post('/update', Fornecedor::class . ':update');
     $group->post('/insert', Fornecedor::class . ':insert');
-    $group->get('/alterar/{id}', Fornecedor::class . ':alterar');
+    $group->get('/alterar/{id}', Fornecedor::class . ':alterar'); 
     $group->post('/delete', Fornecedor::class . ':delete');
 });

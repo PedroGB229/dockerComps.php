@@ -14,6 +14,7 @@ final class Users extends AbstractMigration
             ->addColumn('sobrenome', 'text', ['null' => true])
             ->addColumn('rg', 'text', ['null' => true])
             ->addColumn('cpf', 'text', ['null' => true])
+            ->addColumn('senha', 'string', ['limit' => 60, 'null' => false])
             ->addColumn('ativo', 'boolean', ['null' => true])
             ->addColumn('administrador', 'boolean', ['null' => true])
             ->addColumn('data_cadastro', 'datetime', ['null' => true, 'default' => 'CURRENT_TIMESTAMP'])

@@ -33,7 +33,12 @@ class SelectQuery
         if (str_contains($placeholder, '.')) {
             $placeholder = substr($field, strpos($field, '.') + 1);
         }
-        $this->where[] = "{$field}  {$operator} :{$placeholder} {$logic}";
+        if ($logic) {
+    $this->where[] = "{$field} {$operator} :{$placeholder} {$logic}";
+} else {
+    $this->where[] = "{$field} {$operator} :{$placeholder}";
+}
+
         $this->binds[$placeholder] = $value;
         return $this;
     }
@@ -49,6 +54,16 @@ class SelectQuery
         $this->limits = " limit {$this->limit} offset {$this->offset} ";
         return $this;
     }
+    public function whereRaw(string $raw, ?string $logic = null): self
+{
+    if ($logic) {
+        $this->where[] = "{$raw} {$logic}";
+    } else {
+        $this->where[] = "{$raw}";
+    }
+    return $this;
+}
+
     private function createQuery(): string
     {
         if (!$this->fields) {

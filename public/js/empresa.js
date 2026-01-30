@@ -5,9 +5,14 @@ const InsertButton = document.getElementById('insert');
 const FieldPassword = document.getElementById('campo_senha');
 const Action = document.getElementById('acao');
 
+// Verifica se Action existe antes de usar
+if (!Action) {
+    console.error('Elemento acao não encontrado no formulário');
+}
+
 // Aplicar máscaras
-$('#cpf').inputmask({ "mask": "999.999.999-99" });
-$('#rg').inputmask({ "mask": "99.999.999" });
+$('#cpf_cnpj').inputmask({ "mask": ["999.999.999-99", "99.999.999/9999-99"] });
+$('#rg_ie').inputmask({ "mask": "99.999.999" });
 
 async function insert() {
     //Valida todos os campos do formulário
@@ -28,7 +33,7 @@ async function insert() {
         //Em caso de erro encerramos o processo.
         return;
     }
-    const response = await Requests.SetForm('form').Post('/usuario/insert');
+    const response = await Requests.SetForm('form').Post('/empresa/insert');
     if (!response.status) {
         Swal.fire({
             icon: "error",
@@ -45,10 +50,6 @@ async function insert() {
     document.getElementById('acao').value = 'e';
     //Setamos o valor do campos ID para que se necessário alterar o registro
     document.getElementById('id').value = response.id;
-    //Modifica a URL da aplicação sem recarregar
-    history.pushState(`/usuario/alterar/${response.id}`, '', `/usuario/alterar/${response.id}`);
-    //Após inserir ocultamos o campos de senha.
-    FieldPassword.classList.add('d-none');
     Swal.fire({
         icon: "success",
         title: response.msg,
@@ -59,8 +60,8 @@ async function insert() {
             Swal.showLoading();
         },
         willClose: () => {
-            //Redireciona automaticamente para a lista de usuários
-            //window.location.href = '/usuario/lista';
+            //Redireciona automaticamente para a lista de fornecedores após insert bem-sucedido
+            window.location.href = '/empresa/lista';
         }
     });
 }
@@ -83,7 +84,7 @@ async function update() {
         //Em caso de erro encerramos o processo.
         return;
     }
-    const response = await Requests.SetForm('form').Post('/usuario/update');
+    const response = await Requests.SetForm('form').Post('/empresa/update');
     if (!response.status) {
         Swal.fire({
             icon: "error",
@@ -107,15 +108,21 @@ async function update() {
             Swal.showLoading();
         },
         willClose: () => {
-            //Redireciona automaticamente para a lista de usuários
-            window.location.href = '/usuario/lista';
+            //Redireciona automaticamente para a lista de fornecedores
+            window.location.href = '/empresa/lista';
         }
     });
 }
 InsertButton.addEventListener('click', async () => {
-    (Action.value === 'c') ? FieldPassword.classList.remove('d-none') : FieldPassword.classList.add('d-none');
-    (Action.value === 'c') ? await insert() : await update();
+    if (Action) {
+        (Action.value === 'c') ? (FieldPassword ? FieldPassword.classList.remove('d-none') : null) : (FieldPassword ? FieldPassword.classList.add('d-none') : null);
+        (Action.value === 'c') ? await insert() : await update();
+    } else {
+        console.error('Action não está definido');
+    }
 });
 document.addEventListener('DOMContentLoaded', async () => {
-    (Action.value === 'c') ? FieldPassword.classList.remove('d-none') : FieldPassword.classList.add('d-none');
+    if (Action && FieldPassword) {
+        (Action.value === 'c') ? FieldPassword.classList.remove('d-none') : FieldPassword.classList.add('d-none');
+    }
 });

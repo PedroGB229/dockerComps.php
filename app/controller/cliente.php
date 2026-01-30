@@ -53,8 +53,7 @@ class Cliente extends Base
                 1 => 'nome_fantasia',
                 2 => 'sobrenome_razao',
                 3 => 'cpf_cnpj',
-                4 => 'rg_ie',
-                5 => 'data_cadastro'
+                4 => 'rg_ie'
             ];
             
             #Capturamos o nome do campo a ser ordenado.
@@ -62,24 +61,22 @@ class Cliente extends Base
             #O termo pesquisado
             $term = $form['search']['value'] ?? '';
             
-            $query = SelectQuery::select('id,nome_fantasia,sobrenome_razao,cpf_cnpj,rg_ie,data_cadastro')->from('supplier');
+            $query = SelectQuery::select('id,nome_fantasia,sobrenome_razao,cpf_cnpj,rg_ie')->from('customer');
             
-            $queryTotal = SelectQuery::select('COUNT(*) as total')->from('supplier');
+            $queryTotal = SelectQuery::select('COUNT(*) as total')->from('customer');
             $totalRecords = $queryTotal->fetch()['total'] ?? 0;
             
             if (!is_null($term) && ($term !== '')) {
-                $query->where('supplier.nome_fantasia', 'ilike', "%{$term}%", 'or')
-                    ->where('supplier.sobrenome_razao', 'ilike', "%{$term}%", 'or')
-                    ->where('supplier.cpf_cnpj', 'ilike', "%{$term}%", 'or')
-                    ->where('supplier.rg_ie', 'ilike', "%{$term}%", 'or')
-                    ->whereRaw("to_char(supplier.data_cadastro, 'YYYY-MM-DD') ILIKE '%{$term}%'");
+                $query->where('customer.nome_fantasia', 'ilike', "%{$term}%", 'or')
+                    ->where('customer.sobrenome_razao', 'ilike', "%{$term}%", 'or')
+                    ->where('customer.cpf_cnpj', 'ilike', "%{$term}%", 'or')
+                    ->where('customer.rg_ie', 'ilike', "%{$term}%");
 
-                $queryFiltered = SelectQuery::select('COUNT(*) as total')->from('supplier')
-                    ->where('supplier.nome_fantasia', 'ilike', "%{$term}%", 'or')
-                    ->where('supplier.sobrenome_razao', 'ilike', "%{$term}%", 'or')
-                    ->where('supplier.cpf_cnpj', 'ilike', "%{$term}%", 'or')
-                    ->where('supplier.rg_ie', 'ilike', "%{$term}%", 'or')
-                    ->whereRaw("to_char(supplier.data_cadastro, 'YYYY-MM-DD') ILIKE '%{$term}%'");
+                $queryFiltered = SelectQuery::select('COUNT(*) as total')->from('customer')
+                    ->where('customer.nome_fantasia', 'ilike', "%{$term}%", 'or')
+                    ->where('customer.sobrenome_razao', 'ilike', "%{$term}%", 'or')
+                    ->where('customer.cpf_cnpj', 'ilike', "%{$term}%", 'or')
+                    ->where('customer.rg_ie', 'ilike', "%{$term}%");
                 $totalFiltered = $queryFiltered->fetch()['total'] ?? 0;
             } else {
                 $totalFiltered = $totalRecords;
@@ -98,8 +95,7 @@ class Cliente extends Base
                     $value['sobrenome_razao'],
                     $value['cpf_cnpj'],
                     $value['rg_ie'],
-                    $value['data_cadastro'],
-                    "<a href='/fornecedor/alterar/{$value['id']}' class='btn btn-warning'>Editar</a>
+                    "<a href='/cliente/alterar/{$value['id']}' class='btn btn-warning'>Editar</a>
                     <button type='button'  onclick='Delete(" . $value['id'] . ");' class='btn btn-danger'>Excluir</button>"
                 ];
             }
@@ -133,13 +129,28 @@ class Cliente extends Base
     }
       public function alterar($request, $response, $args)
     {
-        $id = $args['id'];
-        $user = SelectQuery::select()->from('customer')->where('id', '=', $id)->fetch();
+        $id = $args['id'] ?? null;
+        
+        // Validar se o ID é válido
+        if (!$id || !is_numeric($id)) {
+            $dadosTemplate = [
+                'acao' => 'c',
+                'id' => '',
+                'titulo' => 'Cadastro e alteracao de cliente',
+                'cliente' => null
+            ];
+            return $this->getTwig()
+                ->render($response, $this->setView('cliente'), $dadosTemplate)
+                ->withHeader('Content-Type', 'text/html')
+                ->withStatus(200);
+        }
+        
+        $cliente = SelectQuery::select()->from('customer')->where('id', '=', $id)->fetch();
         $dadosTemplate = [
             'acao' => 'e',
             'id' => $id,
             'titulo' => 'Cadastro e alteracao de cliente',
-            'cliente' => $user
+            'cliente' => $cliente
         ];
         return $this->getTwig()
             ->render($response, $this->setView('cliente'), $dadosTemplate)
@@ -153,8 +164,8 @@ class Cliente extends Base
             
             // Primeiro, deleta registros relacionados em contato
             try {
-                DeleteQuery::table('contact')
-                    ->where('id_supplier', '=', $id)
+                DeleteQuery::table('contato')
+                    ->where('id_customer', '=', $id)
                     ->delete();
             } catch (\Exception $e) {
                 // Log ou ignore se não houver registros
@@ -162,24 +173,24 @@ class Cliente extends Base
 
             // Depois, deleta registros relacionados em endereco
             try {
-                DeleteQuery::table('address')
-                    ->where('id_supplier', '=', $id)
+                DeleteQuery::table('endereco')
+                    ->where('id_customer', '=', $id)
                     ->delete();
             } catch (\Exception $e) {
                 // Log ou ignore se não houver registros
             }
 
             // Finalmente, deleta o usuário
-            $IsDelete = DeleteQuery::table('supplier')
+            $IsDelete = DeleteQuery::table('customer')
                 ->where('id', '=', $id)
                 ->delete();
 
             if (!$IsDelete) {
-                $data = ['status' => false, 'msg' => 'Erro ao deletar fornecedor', 'id' => $id];
+                $data = ['status' => false, 'msg' => 'Erro ao deletar cliente', 'id' => $id];
                 return $this->SendJson($response, $data, 200);
             }
             
-            $data = ['status' => true, 'msg' => 'fornecedor removido com sucesso!', 'id' => $id];
+            $data = ['status' => true, 'msg' => 'Cliente removido com sucesso!', 'id' => $id];
             return $this->SendJson($response, $data, 200);
             
         } catch (\Throwable $th) {
@@ -196,10 +207,7 @@ class Cliente extends Base
                 'nome_fantasia' => $form['nome_fantasia'],
                 'sobrenome_razao' => $form['sobrenome_razao'],
                 'cpf_cnpj' => $form['cpf_cnpj'],
-                'rg_ie' => $form['rg_ie'],
-                'ativo' => $form['ativo'],
-                'data_cadastro' => $form['data_cadastro'],
-                'data_atualizacao' => $form['data_atualizacao'] 
+                'rg_ie' => $form['rg_ie']
             ];
             $IsUpdate = UpdateQuery::table('customer')->set($FieldAndValues)->where('id', '=', $id)->update();
             if (!$IsUpdate) {
@@ -226,11 +234,10 @@ class Cliente extends Base
         try {
             $form = $request->getParsedBody();
             $FieldsAndValues = [
-                 'nome_fantasia' => $form['nome_fantasia'] ?? null,
+                'nome_fantasia' => $form['nome_fantasia'] ?? null,
                 'sobrenome_razao' => $form['sobrenome_razao'] ?? null,
                 'cpf_cnpj' => $form['cpf_cnpj'] ?? null,
-                'rg_ie' => $form['rg_ie'] ?? null,
-                'ativo' => $form['ativo'] ?? 1
+                'rg_ie' => $form['rg_ie'] ?? null
             ];
             $IsSave = InsertQuery::table('customer')->save($FieldsAndValues);
 
@@ -242,7 +249,7 @@ class Cliente extends Base
             $id = SelectQuery::select('id')->from('customer')->order('id', 'desc')->fetch();
             $data = [
                 'status' => true,
-                'msg' => 'cliente cadastrado com sucesso!',
+                'msg' => 'Cliente cadastrado com sucesso!',
                 'id' => $id['id'] ?? 0
             ];
             return $this->SendJson($response, $data, 200);

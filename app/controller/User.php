@@ -2,62 +2,133 @@
 
 namespace app\controller;
 
-use app\database\builder\SelectQuery;
+use app\database\builder\DeleteQuery;
 use app\database\builder\InsertQuery;
+use app\database\builder\SelectQuery;
 use app\database\builder\UpdateQuery;
+
 
 class User extends Base
 {
+
     public function lista($request, $response)
     {
-        try {
-            $dadosTemplate = [
-                'titulo' => 'Pesquisa de usuários'
-            ];
-            return $this->getTwig()
-                ->render($response, $this->setView('listuser'), $dadosTemplate)
-                ->withHeader('Content-Type', 'text/html')
-                ->withStatus(200);
-        } catch (\Exception $e) {
-            var_dump($e);
-        }
+        $dadosTemplate = [
+            'titulo' => 'Lista de usuário'
+        ];
+        return $this->getTwig()
+            ->render($response, $this->setView('listuser'), $dadosTemplate)
+            ->withHeader('Content-Type', 'text/html')
+            ->withStatus(200);
     }
     public function cadastro($request, $response)
     {
-        try {
-            $dadosTemplate = [
-                'acao' => 'c',
-                'titulo' => 'Cadastro e edição'
-            ];
-            return $this->getTwig()
-                ->render($response, $this->setView('user'), $dadosTemplate)
-                ->withHeader('Content-Type', 'text/html')
-                ->withStatus(200);
-        } catch (\Exception $e) {
-            var_dump($e);
-        }
+        $dadosTemplate = [
+            'acao' => 'c',
+            'titulo' => 'Cadastro e alteracao de usuário'
+        ];
+        return $this->getTwig()
+            ->render($response, $this->setView('user'), $dadosTemplate)
+            ->withHeader('Content-Type', 'text/html')
+            ->withStatus(200);
     }
     public function alterar($request, $response, $args)
     {
-        try {
-            $id = $args['id'];
-            $user = SelectQuery::select()->from('users')->where('id', '=', $id)->fetch();
+        $id = $args['id'] ?? null;
+        
+        // Validar se o ID é válido
+        if (!$id || !is_numeric($id)) {
             $dadosTemplate = [
-                'acao' => 'e',
-                'id' => $id,
-                'titulo' => 'Cadastro e edição',
-                'user' => $user
+                'acao' => 'c',
+                'id' => '',
+                'titulo' => 'Cadastro e alteracao de usuário',
+                'usuario' => null
             ];
             return $this->getTwig()
                 ->render($response, $this->setView('user'), $dadosTemplate)
                 ->withHeader('Content-Type', 'text/html')
                 ->withStatus(200);
-        } catch (\Exception $e) {
-            var_dump($e);
         }
+        
+        $usuario = SelectQuery::select()->from('users')->where('id', '=', $id)->fetch();
+        $dadosTemplate = [
+            'acao' => 'e',
+            'id' => $id,
+            'titulo' => 'Cadastro e alteracao de usuário',
+            'usuario' => $usuario
+        ];
+        return $this->getTwig()
+            ->render($response, $this->setView('user'), $dadosTemplate)
+            ->withHeader('Content-Type', 'text/html')
+            ->withStatus(200);
+    }
+    public function listuser($request, $response)
+    {
+        #Captura todas a variaveis de forma mais segura VARIAVEIS POST.
+        $form = $request->getParsedBody();
+        #Qual a coluna da tabela deve ser ordenada.
+        $order = ($form['order'][0]['column'])
+            ? $form['order'][0]['column']
+            : 0;
+        #Tipo de ordenação
+        $orderType = $form['order'][0]['dir'] ?? 'desc';
+        #Em qual registro se inicia o retorno dos registro, OFFSET
+        $start = $form['start'];
+        #Limite de registro a serem retornados do banco de dados LIMIT
+        $length = $form['length'];
+        $fields = [
+            0 => 'id',
+            1 => 'nome',
+            2 => 'sobrenome',
+            3 => 'cpf',
+            4 => 'rg'
+        ];
+        #Capturamos o nome do capo a ser ordenado.
+        $orderField = $fields[$order];
+        #O termo pesquisado
+        $term = $form['search']['value'];
+        $query = SelectQuery::select('id,nome,sobrenome,cpf,rg')->from('users');
+        if (!is_null($term) && ($term !== '')) {
+            $query->where('users.nome', 'ilike', "%{$term}%", 'or')
+                ->where('users.sobrenome', 'ilike', "%{$term}%", 'or')
+                ->where('users.cpf', 'ilike', "%{$term}%", 'or')
+                ->where('users.rg', 'ilike', "%{$term}%");
+        }
+
+        $users = $query
+            ->order($orderField, $orderType)
+            ->limit($length, $start)
+            ->fetchAll();
+
+        $userData = [];
+        foreach ($users as $key => $value) {
+            $userData[$key] = [
+                $value['id'],
+                $value['nome'],
+                $value['sobrenome'],
+                $value['cpf'],
+                $value['rg'],
+                "<a href='/usuario/alterar/{$value['id']}' class='btn btn-warning'>Editar</a>
+                 <button type='button'  onclick='Delete(" . $value['id'] . ");' class='btn btn-danger'>Excluir</button>"
+            ];
+        }
+        $data = [
+            'status' => true,
+            'recordsTotal' => count($users),
+            'recordsFiltered' => count($users),
+            'data' => $userData
+        ];
+
+        $payload = json_encode($data);
+
+        $response->getBody()->write($payload);
+
+        return $response
+            ->withHeader('Content-Type', 'application/json')
+            ->withStatus(200);
     }
     public function insert($request, $response)
-    {  
+    {
         try {
             $form = $request->getParsedBody();
             $FieldAndValues = [
@@ -65,19 +136,67 @@ class User extends Base
                 'sobrenome' => $form['sobrenome'],
                 'cpf' => $form['cpf'],
                 'rg' => $form['rg'],
-                'ativo' => $form['ativo'],
-                'administrador' => $form['administrador'],
-                'data_cadastro' => $form['data_cadastro'],
-                'data_atualizacao' => $form['data_atualizacao']
+                'senha' => password_hash($form['senha'], PASSWORD_DEFAULT),
+                #'ativo' => (isset($form['ativo']) and $form['ativo'] === 'true') ? true : false,
+                #'administrador' => (isset($form['administrador']) and $form['administrador'] === 'true') ? true : false
             ];
             $IsSave = InsertQuery::table('users')->save($FieldAndValues);
+
             if (!$IsSave) {
-                return $this->SendJson($response, ['status' => false, 'msg' => 'Restrição: ' . $IsSave, 'id' => 0], 403);
+                $data = ['status' => false, 'msg' => 'Erro ao inserir usuário', 'id' => 0];
+                return $this->SendJson($response, $data, 200);
             }
-            $user = SelectQuery::select('id')->from('users')->order('id', 'desc')->fetch();
-            return $this->SendJson($response, ['status' => true, 'msg' => 'Salvo com sucesso', 'id' => $user['id']], 201);
-        } catch (\Exception $e) {
-            return $this->SendJson($response, ['status' => false, 'msg' => 'Restrição: ' . $e->getMessage(), 'id' => 0], 500);
+            
+            $id = SelectQuery::select('id')->from('users')->order('id', 'desc')->fetch();
+            $data = [
+                'status' => true,
+                'msg' => 'Usuário cadastrado com sucesso!',
+                'id' => $id['id'] ?? 0
+            ];
+             return $this->SendJson($response, $data, 200);
+        } catch (\Throwable $th) {
+            $data = ['status' => false, 'msg' => 'Exceção: ' . $th->getMessage(), 'id' => 0];
+            return $this->SendJson($response, $data, 500);
+        }
+    }
+    public function delete($request, $response)
+    {
+        try {
+            $id = $_POST['id'];
+
+            // Primeiro, deleta registros relacionados em contato
+            try {
+                DeleteQuery::table('contato')
+                    ->where('id_users', '=', $id)
+                    ->delete();
+            } catch (\Exception $e) {
+                // Log ou ignore se não houver registros
+            }
+
+            // Depois, deleta registros relacionados em endereco
+            try {
+                DeleteQuery::table('endereco')
+                    ->where('id_users', '=', $id)
+                    ->delete();
+            } catch (\Exception $e) {
+                // Log ou ignore se não houver registros
+            }
+
+            // Finalmente, deleta o usuário
+            $IsDelete = DeleteQuery::table('users')
+                ->where('id', '=', $id)
+                ->delete();
+
+            if (!$IsDelete) {
+                $data = ['status' => false, 'msg' => 'Erro ao deletar usuário', 'id' => $id];
+                return $this->SendJson($response, $data, 200);
+            }
+
+            $data = ['status' => true, 'msg' => 'Usuário removido com sucesso!', 'id' => $id];
+            return $this->SendJson($response, $data, 200);
+        } catch (\Throwable $th) {
+            $data = ['status' => false, 'msg' => 'Erro: ' . $th->getMessage(), 'id' => $_POST['id'] ?? 0];
+            return $this->SendJson($response, $data, 500);
         }
     }
     public function update($request, $response)
@@ -85,26 +204,41 @@ class User extends Base
         try {
             $form = $request->getParsedBody();
             $id = $form['id'];
-            if (is_null($id) || empty($id)) {
-                return $this->SendJson($response, ['status' => false, 'msg' => 'Por favor informe o ID', 'id' => 0], 500);
-            }
             $FieldAndValues = [
-                'nome' => $form['nome'] ?? null,
-                'sobrenome' => $form['sobrenome'] ?? null,
-                'cpf' => $form['cpf'] ?? null,
-                'rg' => $form['rg'] ?? null,
-                'ativo' => $form['ativo'] ?? null,
-                'administrador' => $form['administrador'] ?? null,
-                'data_cadastro' => $form['data_cadastro'] ?? null,
-                'data_atualizacao' => $form['data_atualizacao'] ?? null
+                'nome' => $form['nome'],
+                'sobrenome' => $form['sobrenome'],
+                'cpf' => $form['cpf'],
+                'rg' => $form['rg'],
+                'senha' => password_hash($form['senha'], PASSWORD_DEFAULT),
+                #'ativo' => (isset($form['ativo']) and $form['ativo'] === 'true') ? true : false,
+                #'administrador' => (isset($form['administrador']) and $form['administrador'] === 'true') ? true : false
             ];
             $IsUpdate = UpdateQuery::table('users')->set($FieldAndValues)->where('id', '=', $id)->update();
             if (!$IsUpdate) {
-                return $this->SendJson($response, ['status' => false, 'msg' => 'Restrição: ' . $IsUpdate, 'id' => 0], 403);
+                $data = [
+                    'status' => false,
+                    'msg' => 'Erro ao atualizar usuário',
+                    'id' => 0
+                ];
+                $payload = json_encode($data);
+                $response->getBody()->write($payload);
+                return $response
+                    ->withHeader('Content-Type', 'application/json')
+                    ->withStatus(200);
             }
-            return $this->SendJson($response, ['status' => true, 'msg' => 'Atualizado com sucesso!', 'id' => $id]);
+            $data = [
+                'status' => true,
+                'msg' => 'Dados alterados com sucesso! ',
+                'id' => $id
+            ];
+            $payload = json_encode($data);
+            $response->getBody()->write($payload);
+            return $response
+                ->withHeader('Content-Type', 'application/json')
+                ->withStatus(200);
         } catch (\Exception $e) {
-            return $this->SendJson($response, ['status' => false, 'msg' => 'Restrição: ' . $e->getMessage(), 'id' => 0], 500);
+            $data = ['status' => false, 'msg' => 'Erro: ' . $e->getMessage(), 'id' => 0];
+            return $this->SendJson($response, $data, 500);
         }
     }
 }

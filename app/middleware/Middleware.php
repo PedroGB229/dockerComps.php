@@ -23,11 +23,7 @@ class Middleware
                 if ($pagina == '/login' && isset($_SESSION['users']) && boolval($_SESSION['users']['logado'])) {
                     return $response->withHeader('Location', HOME)->withStatus(302);
                 }
-                #Se não estiver logado e não está tentando acessar /login, redireciona para login
-                if ((empty($_SESSION['users']) || !boolval($_SESSION['users']['logado'])) && ($pagina !== '/login')) {
-                    session_destroy();
-                    return $response->withHeader('Location', HOME . '/login')->withStatus(302);
-                }
+              
             }
             return $response;
         };

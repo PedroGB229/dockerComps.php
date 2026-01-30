@@ -32,14 +32,14 @@ class Login extends Base
             #Captura os dados do form
             $form = $request->getParsedBody();
             #Capturar os dados do usuário.
-            $dadosUsuario = [
+            $dadosusers = [
                 'nome' => $form['nome'],
                 'sobrenome' => $form['sobrenome'],
                 'cpf' => $form['cpf'],
                 'rg' => $form['rg'],
                 'senha' => password_hash($form['senhaCadastro'], PASSWORD_DEFAULT)
             ];
-            $IsInseted = InsertQuery::table('usuario')->save($dadosUsuario);
+            $IsInseted = InsertQuery::table('users')->save($dadosusers);
             if (!$IsInseted) {
                 return $this->SendJson(
                     $response,
@@ -48,15 +48,15 @@ class Login extends Base
                 );
             }
             #Captura o código do ultimo usuário cadastrado na tabela de usuário
-            $id = SelectQuery::select('id')->from('usuario')->order('id', 'desc')->fetch();
+            $id = SelectQuery::select('id')->from('users')->order('id', 'desc')->fetch();
             #Colocamos o ID do ultimo usuário cadastrado na varaivel $id_usuario.
-            $id_usuario = $id['id'];
+            $id_users = $id['id'];
             #Finalizar o pré-cadastro.
             #Cadastrar todos os contatos: E-mail, Celular, WhastaApp.
             $dadosContato = [];
             #Inserindo o Email.
             $dadosContato = [
-                'id_usuario' => $id_usuario,
+                'id_users' => $id_users,
                 'tipo' => 'email',
                 'contato' => $form['email']
             ];
@@ -64,7 +64,7 @@ class Login extends Base
             $dadosContato = [];
             #Inserindo o whatsapp.
             $dadosContato = [
-                'id_usuario' => $id_usuario,
+                'id_users' => $id_users,
                 'tipo' => 'whatsapp',
                 'contato' => $form['whatsapp']
 
@@ -73,13 +73,13 @@ class Login extends Base
             $dadosContato = [];
             #Inserindo o Celular.
             $dadosContato = [
-                'id_usuario' => $id_usuario,
+                'id_users' => $id_users,
                 'tipo' => 'celular',
                 'contato' => $form['celular']
 
             ];
             InsertQuery::table('contato')->save($dadosContato);
-            return $this->SendJson($response, ['status' => true, 'msg' => 'Pré-cadastro realizado com sucesso!', 'id' => $id_usuario], 201);
+            return $this->SendJson($response, ['status' => true, 'msg' => 'Pré-cadastro realizado com sucesso!', 'id' => $id_users], 201);
         } catch (\Exception $e) {
             return $this->SendJson($response, ['status' => true, 'msg' => 'Restrição:' . $e->getMessage(), 'id' => 0], 500);
         }
@@ -96,7 +96,7 @@ class Login extends Base
                 return $this->SendJson($response, ['status' => false, 'msg' => 'O campo senha é obrigatório!', 'id' => 0], 403);
             }
             $user = SelectQuery::select()
-                ->from('vw_usuario_contatos')
+                ->from('vw_users_contatos')
                 ->where('cpf', '=', $form['login'], 'or')
                 ->where('email', '=', $form['login'], 'or')
                 ->where('celular', '=', $form['login'], 'or')
@@ -124,10 +124,10 @@ class Login extends Base
                 );
             }
             if (password_needs_rehash($user['senha'], PASSWORD_DEFAULT)) {
-                UpdateQuery::table('usuario')->set(['senha' => password_hash($form['senha'], PASSWORD_DEFAULT)])->where('id', '=', $user['id'])->update();
+                UpdateQuery::table('users')->set(['senha' => password_hash($form['senha'], PASSWORD_DEFAULT)])->where('id', '=', $user['id'])->update();
             }
             #Criar a sessão do usuário.
-            $_SESSION['usuario'] = [
+            $_SESSION['users'] = [
                 'id' => $user['id'],
                 'nome' => $user['nome'],
                 'sobrenome' => $user['sobrenome'],
@@ -156,28 +156,31 @@ class Login extends Base
             if (!isset($form['identificador']) || empty(trim($form['identificador']))) {
                 return $this->SendJson($response, ['status' => false, 'msg' => 'O campo identificador é obrigatório!', 'id' => 0], 403);
             }
-
             $identificador = trim($form['identificador']);
 
             $user = SelectQuery::select()
-                ->from('vw_usuario_contatos')
+                ->from('vw_users_contatos')
                 ->where('cpf', '=', $identificador, 'or')
                 ->where('email', '=', $identificador, 'or')
                 ->where('celular', '=', $identificador, 'or')
                 ->where('whatsapp', '=', $identificador)
                 ->fetch();
-
+            
             if (!isset($user) || empty($user) || count($user) <= 0) {
                 return $this->SendJson($response, ['status' => false, 'msg' => 'Identificador não encontrado!', 'id' => 0], 404);
             }
 
             // Gerar código de 6 dígitos
             $codigo = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
-            
+
+            // Determinar o email para onde enviar o código
+            $emailParaEnvio = $user['email'];
+
             // Armazenar código em sessão com timestamp
             $_SESSION['recuperacao_senha'] = [
-                'id_usuario' => $user['id'],
+                'id_users' => $user['id'],
                 'codigo' => $codigo,
+                'email' => $emailParaEnvio,
                 'timestamp' => time(),
                 'tentativas' => 0
             ];
@@ -190,8 +193,11 @@ class Login extends Base
                 $corpo .= "<p>Seu código de recuperação é: <strong style='font-size: 24px; color: #007bff;'>{$codigo}</strong></p>";
                 $corpo .= "<p>Este código expira em 15 minutos.</p>";
                 $corpo .= "<p>Se você não solicitou isso, ignore este email.</p>";
-
-                Email::add($assunto, $corpo, $user['nome'], $user['email'])->send();
+                
+                if (!Email::add($assunto, $corpo, $user['nome'], $emailParaEnvio)->send()) {
+                    error_log('Erro ao enviar email de recuperação');
+                    return $this->SendJson($response, ['status' => false, 'msg' => 'Erro ao enviar código por email!', 'id' => 0], 500);
+                }
             } catch (\Exception $e) {
                 error_log('Erro ao enviar email de recuperação: ' . $e->getMessage());
                 return $this->SendJson($response, ['status' => false, 'msg' => 'Erro ao enviar código por email!', 'id' => 0], 500);
@@ -199,7 +205,8 @@ class Login extends Base
 
             return $this->SendJson($response, ['status' => true, 'msg' => 'Código enviado para o email! Verifique sua caixa de entrada.', 'id' => $user['id']], 200);
         } catch (\Exception $e) {
-            return $this->SendJson($response, ['status' => false, 'msg' => 'Restrição:' . $e->getMessage(), 'id' => 0], 500);
+            error_log('Erro em recuperar: ' . $e->getMessage());
+            return $this->SendJson($response, ['status' => false, 'msg' => 'Restrição: ' . $e->getMessage(), 'id' => 0], 500);
         }
     }
 
@@ -237,7 +244,7 @@ class Login extends Base
                 return $this->SendJson($response, ['status' => false, 'msg' => 'Código inválido!', 'id' => 0], 403);
             }
 
-            return $this->SendJson($response, ['status' => true, 'msg' => 'Código verificado com sucesso!', 'id' => $sessao['id_usuario']], 200);
+            return $this->SendJson($response, ['status' => true, 'msg' => 'Código verificado com sucesso!', 'id' => $sessao['id_users']], 200);
         } catch (\Exception $e) {
             return $this->SendJson($response, ['status' => false, 'msg' => 'Restrição:' . $e->getMessage(), 'id' => 0], 500);
         }
@@ -258,20 +265,20 @@ class Login extends Base
             }
 
             $sessao = $_SESSION['recuperacao_senha'];
-            $id_usuario = $sessao['id_usuario'];
+            $id_users = $sessao['id_users'];
 
             // Atualizar senha
             $novaSenhaHash = password_hash($form['senha'], PASSWORD_DEFAULT);
-            $updated = UpdateQuery::table('usuario')->set(['senha' => $novaSenhaHash])->where('id', '=', $id_usuario)->update();
+            $updated = UpdateQuery::table('users')->set(['senha' => $novaSenhaHash])->where('id', '=', $id_users)->update();
 
             if (!$updated) {
-                return $this->SendJson($response, ['status' => false, 'msg' => 'Erro ao atualizar a senha!', 'id' => $id_usuario], 500);
+                return $this->SendJson($response, ['status' => false, 'msg' => 'Erro ao atualizar a senha!', 'id' => $id_users], 500);
             }
 
             // Limpar sessão de recuperação
             unset($_SESSION['recuperacao_senha']);
 
-            return $this->SendJson($response, ['status' => true, 'msg' => 'Senha atualizada com sucesso! Acesse com sua nova senha.', 'id' => $id_usuario], 200);
+            return $this->SendJson($response, ['status' => true, 'msg' => 'Senha atualizada com sucesso! Acesse com sua nova senha.', 'id' => $id_users], 200);
         } catch (\Exception $e) {
             return $this->SendJson($response, ['status' => false, 'msg' => 'Restrição:' . $e->getMessage(), 'id' => 0], 500);
         }
