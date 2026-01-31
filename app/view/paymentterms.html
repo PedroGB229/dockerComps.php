@@ -1,0 +1,131 @@
+{% extends "main.html" %}
+{% block main %}
+<div class="app-content-header">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-sm-6">
+                <h3 class="mb-0">{{titulo}}</h3>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-end">
+                    <li class="breadcrumb-item" aria-current="page"><a href="/home">Início</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Termos de Pagamento</li>
+                </ol>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <a href="/pagamento/lista" class="btn btn-warning">Voltar</a>
+                    </div>
+                    <div class="card-body">
+                        <form id="formPaymentTerms">
+                            <div>
+                                <select class="form-select form-select-lg col-md-4" aria-label="Large select example">
+                                    <option selected>Open this select menu</option>
+                                    <option value="1">Pagamento à Vista</option>
+                                    <option value="2">Pagamento Antecipado</option>
+                                    <option value="3">Pagamento a Prazo (Net Terms)</option>
+                                    <option value="4">Pagamento recorrente</option>
+                                    <option value="5">Pagamento Parcelado</option>
+                                    <option value="6">Pix (Imediato, Agendado ou Parcelado)</option>
+                                    <option value="7">Cartão de Crédito</option>
+                                    <option value="8">Cartão de Débito</option>
+                                    <option value="9">Carteiras Digitais (E-wallets)</option>
+                                    <option value="10">Transferência Bancária (TED/DOC)</option>
+                                    <option value="11">Link de Pagamento</option>
+                                    <option value="12">Pagamento na Entrega</option>
+                                    <option value="13">Faturamento (B2B)</option>
+                                    <option value="14">Consignação</option>
+                                </select>
+                                <div class="col-md-4">
+                                    <label for="descricao" class="form-label">Condição de pagamento EX.
+                                        (Dinheiro)</label>
+                                    <input type="text" class="form-control" id="descricao" name="descricao"
+                                        value="{% if termo %}{{ termo.descricao }}{% endif %}" required>
+                                </div>
+                            </div>
+                            class="form-group mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="ativo" name="ativo" value="true" {%
+                                    if termo and termo.ativo %}checked{% endif %}>
+                                <label class="form-check-label" for="ativo">
+                                    Ativo
+                                </label>
+                            </div>
+
+
+                            <hr>
+                            <h5>Parcelamento</h5>
+
+                            <div class="row mb-3">
+                                <div class="col-md-4">
+                                    <label for="quantidade_parcelas" class="form-label">Quantidade de parcelas</label>
+                                    <input type="number" class="form-control" id="quantidade_parcelas"
+                                        name="quantidade_parcelas" min="1">
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="intervalo_dias" class="form-label">Intervalo em (Dias)</label>
+                                    <input type="number" class="form-control" id="intervalo_dias" name="intervalo_dias"
+                                        min="0" placeholder="Ex. 30 dias">
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="alterar_vencimento" class="form-label">Alterar a data de venc. parcela
+                                        EX. (20 dias)</label>
+                                    <input type="number" class="form-control" id="alterar_vencimento"
+                                        name="alterar_vencimento" min="0">
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <button type="button" class="btn btn-info" id="btnAdicionarParcela">Adicionar</button>
+                            </div>
+
+                            <div class="table-responsive">
+                                <table class="table table-striped table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>Código</th>
+                                            <th>Parcelas</th>
+                                            <th>Intervalo em (Dias)</th>
+                                            <th>Alterar venc. inicial (Dias)</th>
+                                            <th>Ação</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="tabelaParcelas">
+                                        {% if parcelas %}
+                                        {% for parcela in parcelas %}
+                                        <tr class="parcela-row" data-id="{{ parcela.id }}">
+                                            <td>{{ parcela.id }}</td>
+                                            <td>{{ parcela.numero_parcelas }}</td>
+                                            <td>{{ parcela.intervalo_dias }}</td>
+                                            <td>{{ parcela.alterar_vencimento_dias }}</td>
+                                            <td>
+                                                <button type="button"
+                                                    class="btn btn-danger btn-sm btnRemoverParcela">Excluir</button>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                        {% endif %}
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <div class="mt-4">
+                                <button type="submit" class="btn btn-success">Salvar</button>
+                                <input type="hidden" id="id" name="id" value="{% if id %}{{ id }}{% endif %}">
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block script %}
+{% include 'script.html' %}
+<script src="/js/paymentterms.js"></script>
+{% endblock %}

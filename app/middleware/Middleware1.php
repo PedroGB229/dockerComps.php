@@ -2,7 +2,7 @@
 
 namespace app\middleware;
 
-class Middleware
+class Middleware1
 {
     public static function route()
     {
