@@ -35,7 +35,7 @@ class PaymentTerms extends Base
     public function alterar($request, $response, $args)
     {
         $id = $args['id'] ?? null;
-        
+
         if (!$id || !is_numeric($id)) {
             $dadosTemplate = [
                 'acao' => 'c',
@@ -52,7 +52,7 @@ class PaymentTerms extends Base
 
         $termo = SelectQuery::select()->from('payment_terms')->where('id', '=', $id)->fetch();
         $parcelas = SelectQuery::select()->from('payment_installments')->where('payment_term_id', '=', $id)->fetchAll();
-        
+
         $dadosTemplate = [
             'acao' => 'e',
             'id' => $id,
@@ -68,24 +68,24 @@ class PaymentTerms extends Base
 
     public function listTerms($request, $response)
     {
-        $form = $request->getParsedBody();
-        $order = ($form['order'][0]['column']) ? $form['order'][0]['column'] : 0;
-        $orderType = $form['order'][0]['dir'] ?? 'desc';
-        $start = $form['start'];
-        $length = $form['length'];
-        
+        $form = $request->getParsedBody() ?? [];
+        $order = isset($form['order'][0]['column']) && $form['order'][0]['column'] !== '' ? $form['order'][0]['column'] : 0;
+        $orderType = isset($form['order'][0]['dir']) && $form['order'][0]['dir'] !== '' ? $form['order'][0]['dir'] : 'desc';
+        $start = $form['start'] ?? 0;
+        $length = $form['length'] ?? 10;
+
         $fields = [
             0 => 'id',
             1 => 'descricao',
             2 => 'ativo'
         ];
-        
-        $orderField = $fields[$order];
-        $term = $form['search']['value'];
-        
+
+        $orderField = $fields[$order] ?? 'id';
+        $term = $form['search']['value'] ?? '';
+
         $query = SelectQuery::select('id,descricao,ativo')->from('payment_terms');
-        
-        if (!is_null($term) && ($term !== '')) {
+
+        if ($term !== '') {
             $query->where('payment_terms.descricao', 'ilike', "%{$term}%");
         }
 
@@ -104,7 +104,7 @@ class PaymentTerms extends Base
                  <button type='button' onclick='Delete(" . $value['id'] . ");' class='btn btn-danger btn-sm'>Excluir</button>"
             ];
         }
-        
+
         $data = [
             'status' => true,
             'recordsTotal' => count($termos),
@@ -123,15 +123,16 @@ class PaymentTerms extends Base
     public function insert($request, $response)
     {
         try {
-            $form = $request->getParsedBody();
-            
+            $form = $request->getParsedBody() ?? [];
+
             $FieldAndValues = [
-                'descricao' => $form['descricao'],
-                'ativo' => (isset($form['ativo']) && $form['ativo'] === 'true') ? true : false
+                'descricao' => $form['descricao'] ?? '',
+                'ativo' => (isset($form['ativo']) && ($form['ativo'] === true || $form['ativo'] === 'true' || $form['ativo'] === '1')) ? 1 : 0
             ];
-            
+
+            $con = \app\database\Connection::connection();
             $IsInsert = InsertQuery::table('payment_terms')->save($FieldAndValues);
-            
+
             if (!$IsInsert) {
                 $data = [
                     'status' => false,
@@ -145,17 +146,17 @@ class PaymentTerms extends Base
                     ->withStatus(200);
             }
 
-            // Inserir parcelas
-            if (isset($form['parcelas']) && is_array($form['parcelas'])) {
-                $con = \app\database\Connection::connection();
-                $lastId = $con->lastInsertId();
+        
 
+            // Inserir parcelas
+            $lastId = (int)$con->lastInsertId();
+            if (isset($form['parcelas']) && is_array($form['parcelas'])) {
                 foreach ($form['parcelas'] as $parcela) {
                     $parcelaData = [
                         'payment_term_id' => $lastId,
-                        'numero_parcelas' => $parcela['numero_parcelas'],
-                        'intervalo_dias' => $parcela['intervalo_dias'],
-                        'alterar_vencimento_dias' => $parcela['alterar_vencimento_dias'] ?? 0
+                        'numero_parcelas' => (int)($parcela['numero_parcelas'] ?? 0),
+                        'intervalo_dias' => (int)($parcela['intervalo_dias'] ?? 0),
+                        'alterar_vencimento_dias' => (int)($parcela['alterar_vencimento_dias'] ?? 0)
                     ];
                     InsertQuery::table('payment_installments')->save($parcelaData);
                 }
@@ -164,14 +165,13 @@ class PaymentTerms extends Base
             $data = [
                 'status' => true,
                 'msg' => 'Termo de pagamento inserido com sucesso',
-                'id' => $con->lastInsertId() ?? 0
+                'id' => $lastId
             ];
             $payload = json_encode($data);
             $response->getBody()->write($payload);
             return $response
                 ->withHeader('Content-Type', 'application/json')
                 ->withStatus(200);
-
         } catch (\Exception $e) {
             $data = [
                 'status' => false,
@@ -186,21 +186,36 @@ class PaymentTerms extends Base
         }
     }
 
+    public function insertInstallment($request, $response)
+    {
+        #Captura os dados do front-end.
+        $form = $request->getParsedBody();
+
+        $dataResponse = [
+            'status' => true,
+            'msg' => 'Cadastro realizado com sucesso!',
+            'id' => 123
+        ];
+
+        #Retorno de teste.
+        return $this->SendJson($response, $dataResponse, 201);
+    }
     public function update($request, $response)
     {
         try {
-            $form = $request->getParsedBody();
-            $id = $form['id'];
+            $form = $request->getParsedBody() ?? [];
+            $id = $form['id'] ?? 0;
 
             $FieldAndValues = [
-                'descricao' => $form['descricao'],
-                'ativo' => (isset($form['ativo']) && $form['ativo'] === 'true') ? true : false,
+                'descricao' => $form['descricao'] ?? '',
+                'ativo' => (isset($form['ativo']) && ($form['ativo'] === true || $form['ativo'] === 'true' || $form['ativo'] === '1')) ? 1 : 0,
                 'data_atualizacao' => date('Y-m-d H:i:s')
             ];
 
             $IsUpdate = UpdateQuery::table('payment_terms')
+                ->set($FieldAndValues)
                 ->where('id', '=', $id)
-                ->save($FieldAndValues);
+                ->update();
 
             if (!$IsUpdate) {
                 $data = [
@@ -223,9 +238,9 @@ class PaymentTerms extends Base
                 foreach ($form['parcelas'] as $parcela) {
                     $parcelaData = [
                         'payment_term_id' => $id,
-                        'numero_parcelas' => $parcela['numero_parcelas'],
-                        'intervalo_dias' => $parcela['intervalo_dias'],
-                        'alterar_vencimento_dias' => $parcela['alterar_vencimento_dias'] ?? 0
+                        'numero_parcelas' => (int)($parcela['numero_parcelas'] ?? 0),
+                        'intervalo_dias' => (int)($parcela['intervalo_dias'] ?? 0),
+                        'alterar_vencimento_dias' => (int)($parcela['alterar_vencimento_dias'] ?? 0)
                     ];
                     InsertQuery::table('payment_installments')->save($parcelaData);
                 }
@@ -240,7 +255,6 @@ class PaymentTerms extends Base
             return $response
                 ->withHeader('Content-Type', 'application/json')
                 ->withStatus(200);
-
         } catch (\Exception $e) {
             $data = [
                 'status' => false,
@@ -285,7 +299,6 @@ class PaymentTerms extends Base
             return $response
                 ->withHeader('Content-Type', 'application/json')
                 ->withStatus(200);
-
         } catch (\Exception $e) {
             $data = [
                 'status' => false,
