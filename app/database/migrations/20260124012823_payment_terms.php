@@ -16,6 +16,7 @@ final class PaymentTerms extends AbstractMigration
         ->addColumn('multa_atraso', 'decimal', ['precision' => 10, 'scale' => 2, 'null' => true])
         ->addColumn('codigo', 'text', ['null' => true])
         ->addColumn('titulo', 'text', ['null' => true])
+        ->addColumn('excluido', 'boolean', ['null' => true])
         ->addColumn('ativo', 'boolean', ['default' => true, 'null' => false])
         ->addColumn('data_cadastro', 'datetime', ['null' => true, 'default' => 'CURRENT_TIMESTAMP'])
         ->addColumn('data_atualizacao', 'datetime', ['null' => true, 'default' => 'CURRENT_TIMESTAMP'])

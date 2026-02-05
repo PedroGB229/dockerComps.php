@@ -7,7 +7,7 @@ const Action = document.getElementById('acao');
 
 // Aplicar máscaras
 $('#cpf').inputmask({ "mask": "999.999.999-99" });
-$('#rg').inputmask({ "mask": "99.999.999" });
+$('#rg').inputmask({ "mask": "99999" });
 
 async function insert() {
     //Valida todos os campos do formulário

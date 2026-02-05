@@ -15,10 +15,13 @@ final class Product extends AbstractMigration
             ->addColumn('company_id', 'biginteger', ['null' => false])
             ->addColumn('nome', 'string', ['limit' => 255, 'null' => false])
             ->addColumn('descricao', 'text', ['null' => true])
+            ->addColumn('descricao_curta', 'text', ['null' => true])
+            ->addColumn('codigo_barras', 'string', ['limit' => 13, 'null' => true])
             ->addColumn('preco_custo', 'decimal', ['precision' => 12, 'scale' => 2, 'null' => false])
             ->addColumn('preco_venda', 'decimal', ['precision' => 12, 'scale' => 2, 'null' => false])
             ->addColumn('estoque', 'integer', ['null' => false, 'default' => 0])
             ->addColumn('ativo', 'boolean', ['default' => true, 'null' => false])
+            ->addColumn('excluido', 'boolean', ['default' => false, 'null' => false])
             ->addColumn('data_cadastro', 'datetime', ['null' => true, 'default' => 'CURRENT_TIMESTAMP'])
             ->addColumn('data_atualizacao', 'datetime', ['null' => true, 'default' => 'CURRENT_TIMESTAMP'])
 
