@@ -20,7 +20,7 @@ $app->group('/login', function (RouteCollectorProxy $group) {
     $group->post('/recuperar', Login::class . ':recuperar');
     $group->post('/verificarCodigo', Login::class . ':verificarCodigo');
     $group->post('/atualizarSenha', Login::class . ':atualizarSenha');
-});
+}); 
 
 $app->group('/usuario', function (RouteCollectorProxy $group) {
     $group->get('/lista', User::class . ':lista');
