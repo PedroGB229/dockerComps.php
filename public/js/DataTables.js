@@ -76,6 +76,14 @@ class DataTables {
     static async Post(url) {
         this.url = url;
         this.method = 'POST';
+        // Calcula base path atual (remove o último segmento do path)
+        const base = window.location.pathname.replace(/\/[^\/]*$/, '');
+        const finalUrl = url.startsWith('/') ? base + url : base + '/' + url;
+        this.url = finalUrl;
+        this.method = 'POST';
+        // Atualiza a configuração para garantir que a URL e método atuais sejam usados
+        this.conf.ajax.url = this.url;
+        this.conf.ajax.type = this.method;
         let table = new $("#" + this.id).DataTable(this.conf);
         $(`#${this.id} tbody`).on('click', 'tr', function () {
             $(this).toggleClass('selected');

@@ -15,25 +15,21 @@ const tabela = new $('#tabela').DataTable({
         searchPlaceholder: 'Digite sua pesquisa...',
     },
     ajax: {
-        url: '/empresas/listempresas',
+        url: '/produto/listproduct',
         type: 'POST'
     }
 });
-// Aplicar máscaras
-$('#cpf').inputmask({ "mask": "999.999.999-99" });
-$('#rg').inputmask({ "mask": "99999" });
-
 async function Delete(id) {
     const formData = new FormData();
     formData.append('id', id);
-    
-    const response = await fetch('/empresas/delete', {
+
+    const response = await fetch('/produto/delete', {
         method: 'POST',
         body: formData
     });
-    
+
     const data = await response.json();
-    
+
     if (!data.status) {
         Swal.fire({
             title: "Erro ao remover!",
@@ -60,3 +56,4 @@ async function Delete(id) {
     tabela.ajax.reload();
 }
 window.Delete = Delete;
+//DataTables.SetId('tabela').Post('/user/listuser');

@@ -22,293 +22,209 @@ class PaymentTerms extends Base
 
     public function cadastro($request, $response)
     {
-        $dadosTemplate = [
-            'acao' => 'c',
-            'titulo' => 'Cadastro de termos de pagamento'
-        ];
-        return $this->getTwig()
-            ->render($response, $this->setView('paymentterms'), $dadosTemplate)
-            ->withHeader('Content-Type', 'text/html')
-            ->withStatus(200);
-    }
-
-    public function alterar($request, $response, $args)
-    {
-        $id = $args['id'] ?? null;
-
-        if (!$id || !is_numeric($id)) {
-            $dadosTemplate = [
-                'acao' => 'c',
-                'id' => '',
-                'titulo' => 'Cadastro de termos de pagamento',
-                'termo' => null,
-                'parcelas' => []
-            ];
-            return $this->getTwig()
-                ->render($response, $this->setView('paymentterms'), $dadosTemplate)
-                ->withHeader('Content-Type', 'text/html')
-                ->withStatus(200);
-        }
-
-        $termo = SelectQuery::select()->from('payment_terms')->where('id', '=', $id)->fetch();
-        $parcelas = SelectQuery::select()->from('payment_installments')->where('payment_term_id', '=', $id)->fetchAll();
-
-        $dadosTemplate = [
-            'acao' => 'e',
-            'id' => $id,
+        $templaData = [
             'titulo' => 'Cadastro de termos de pagamento',
-            'termo' => $termo,
-            'parcelas' => $parcelas
+            'acao' => 'c',
+            'id' => '',
         ];
         return $this->getTwig()
-            ->render($response, $this->setView('paymentterms'), $dadosTemplate)
+            ->render($response, $this->setView('paymentterms'), $templaData)
             ->withHeader('Content-Type', 'text/html')
             ->withStatus(200);
     }
-
-    public function listTerms($request, $response)
+    public function listaPaymentTerms($request, $response)
     {
-        $form = $request->getParsedBody() ?? [];
-        $order = isset($form['order'][0]['column']) && $form['order'][0]['column'] !== '' ? $form['order'][0]['column'] : 0;
-        $orderType = isset($form['order'][0]['dir']) && $form['order'][0]['dir'] !== '' ? $form['order'][0]['dir'] : 'desc';
-        $start = $form['start'] ?? 0;
-        $length = $form['length'] ?? 10;
-
+        #Captura todas a variaveis de forma mais segura VARIAVEIS POST.
+        $form = $request->getParsedBody();
+        #Qual a coluna da tabela deve ser ordenada.
+        $order = $form['order'][0]['column'] ?? 0;
+        #Tipo de ordenação
+        $orderType = $form['order'][0]['dir'] ?? 'desc';
+        #Em qual registro se inicia o retorno dos registro, OFFSET
+        $start = $form['start'];
+        #Limite de registro a serem retornados do banco de dados LIMIT
+        $length = $form['length'];
         $fields = [
             0 => 'id',
-            1 => 'descricao',
-            2 => 'ativo'
+            1 => 'codigo',
+            2 => 'titulo',
+            3 => 'atalho',
         ];
-
-        $orderField = $fields[$order] ?? 'id';
-        $term = $form['search']['value'] ?? '';
-
-        $query = SelectQuery::select('id,descricao,ativo')->from('payment_terms');
-
-        if ($term !== '') {
-            $query->where('payment_terms.descricao', 'ilike', "%{$term}%");
+        #Capturamos o nome do capo a ser ordenado.
+        $orderField = $fields[$order];
+        #O termo pesquisado
+        $term = $form['search']['value'];
+        $query = SelectQuery::select('id,codigo,titulo,atalho')->from('payment_terms');
+        if (!is_null($term) && ($term !== '')) {
+            $query->where('payment_terms.codigo', 'ilike', "%{$term}%", 'or')
+                ->where('payment_terms.titulo', 'ilike', "%{$term}%", 'or')
+                ->where('payment_terms.atalho', 'ilike', "%{$term}%");
         }
-
-        $termos = $query
-            ->order($orderField, $orderType)
+        if (!is_null($order) && ($order !== '')) {
+            $query->order($orderField, $orderType);
+        }
+        $clientes = $query
             ->limit($length, $start)
             ->fetchAll();
-
-        $userData = [];
-        foreach ($termos as $key => $value) {
-            $userData[$key] = [
+        $clienteData = [];
+        foreach ($clientes as $key => $value) {
+            $clienteData[$key] = [
                 $value['id'],
-                $value['descricao'],
-                $value['ativo'] ? 'Sim' : 'Não',
-                "<a href='/pagamento/alterar/{$value['id']}' class='btn btn-warning btn-sm'>Editar</a>
-                 <button type='button' onclick='Delete(" . $value['id'] . ");' class='btn btn-danger btn-sm'>Excluir</button>"
+                $value['codigo'],
+                $value['titulo'],
+                $value['atalho'],
+                "<button type=\"button\" onclick=\"Editar(" . $value['id'] . ");\" class=\"btn btn-warning\">Editar</button>
+                <button type=\"button\" onclick=\"Delete(" . $value['id'] . ");\" class=\"btn btn-danger\">Excluir</button>"
             ];
         }
-
         $data = [
             'status' => true,
-            'recordsTotal' => count($termos),
-            'recordsFiltered' => count($termos),
-            'data' => $userData
+            'recordsTotal' => count($clientes),
+            'recordsFiltered' => count($clientes),
+            'data' => $clienteData
         ];
-
         $payload = json_encode($data);
+
         $response->getBody()->write($payload);
 
         return $response
             ->withHeader('Content-Type', 'application/json')
             ->withStatus(200);
     }
-
+    public function alterar($request, $response, $args)
+    {
+        $id = $args['id'];
+        $paymentTerms = SelectQuery::select() #Permite selecionar todas as colunas, ou colunas especificas.
+            ->from('payment_terms') #Informa o nome da tabela.
+            ->where('id', '=', $id) #Seleciona somente o registro com o ID informado.
+            ->fetch(); #Obter o registro.
+        #Caso não exista retornamos para a pagina de lista de condiçãoes de pagamento.
+        if (!$paymentTerms) {
+            return header('Location: /pagamento/lista');
+            die;
+        }
+        #Passamos os dados para o template.
+        $templaData = [
+            'titulo' => 'Alteração de termos de pagamento',
+            'acao' => 'e',
+            'id' => $id,
+            'paymentTerms' => $paymentTerms
+        ];
+        return $this->getTwig()
+            ->render($response, $this->setView('paymentterms'), $templaData)
+            ->withHeader('Content-Type', 'text/html')
+            ->withStatus(200);
+    }
     public function insert($request, $response)
     {
+        #Captura os dados do front-end.
+        $form = $request->getParsedBody();
+        $FieldAndValues = [
+            'codigo' => $form['codigo'],
+            'titulo' => $form['titulo']
+        ];
         try {
-            $form = $request->getParsedBody() ?? [];
-
-            $FieldAndValues = [
-                'descricao' => $form['descricao'] ?? '',
-                'ativo' => (isset($form['ativo']) && ($form['ativo'] === true || $form['ativo'] === 'true' || $form['ativo'] === '1')) ? 1 : 0
-            ];
-
-            $con = \app\database\Connection::connection();
-            $IsInsert = InsertQuery::table('payment_terms')->save($FieldAndValues);
-
-            if (!$IsInsert) {
-                $data = [
+            $IsSave = InsertQuery::table('payment_terms')->save($FieldAndValues);
+            if (!$IsSave) {
+                $dataResponse = [
                     'status' => false,
-                    'msg' => 'Erro ao inserir termo de pagamento',
+                    'msg' => 'Restrição: ' . $IsSave,
                     'id' => 0
                 ];
-                $payload = json_encode($data);
-                $response->getBody()->write($payload);
-                return $response
-                    ->withHeader('Content-Type', 'application/json')
-                    ->withStatus(200);
+                return $this->SendJson($response, $dataResponse, 500);
             }
-
-        
-
-            // Inserir parcelas
-            $lastId = (int)$con->lastInsertId();
-            if (isset($form['parcelas']) && is_array($form['parcelas'])) {
-                foreach ($form['parcelas'] as $parcela) {
-                    $parcelaData = [
-                        'payment_term_id' => $lastId,
-                        'numero_parcelas' => (int)($parcela['numero_parcelas'] ?? 0),
-                        'intervalo_dias' => (int)($parcela['intervalo_dias'] ?? 0),
-                        'alterar_vencimento_dias' => (int)($parcela['alterar_vencimento_dias'] ?? 0)
-                    ];
-                    InsertQuery::table('payment_installments')->save($parcelaData);
-                }
-            }
-
-            $data = [
+            #Seleciona o ID do ultimo registro da tabela payment_terms.
+            $Id = (array) SelectQuery::select('id')->from('payment_terms')->order('id', 'desc')->fetch();
+            $dataResponse = [
                 'status' => true,
-                'msg' => 'Termo de pagamento inserido com sucesso',
-                'id' => $lastId
+                'msg' => 'Cadastro realizado com sucesso!',
+                'id' => $Id['id']
             ];
-            $payload = json_encode($data);
-            $response->getBody()->write($payload);
-            return $response
-                ->withHeader('Content-Type', 'application/json')
-                ->withStatus(200);
+            #Retorno de teste.
+            return $this->SendJson($response, $dataResponse, 201);
         } catch (\Exception $e) {
-            $data = [
-                'status' => false,
-                'msg' => 'Erro: ' . $e->getMessage(),
-                'id' => 0
-            ];
-            $payload = json_encode($data);
-            $response->getBody()->write($payload);
-            return $response
-                ->withHeader('Content-Type', 'application/json')
-                ->withStatus(200);
+            return $this->SendJson($response, ['status' => false, 'msg' => 'Restrição: ' . $e->getMessage(), 'id' => 0], 500);
         }
     }
-
+    public function update($request, $response)
+    {
+        $form = $request->getParsedBody();
+        $id = $form['id'];
+        if (is_null($id) || $id == '' || empty($id)) {
+            return $this->SendJson($response, ['status' => false, 'msg' => 'Por favor informe o código da condição de pagamento', 'id' => 0], 403);
+        }
+        $FieldAndValues = [
+            'codigo' => $form['codigo'],
+            'titulo' => $form['titulo'],
+            'atalho' => $form['atalho']
+        ];
+        $isUpdated = UpdateQuery::table('payment_terms')
+            ->set($FieldAndValues)
+            ->where('id', '=', $id)
+            ->update();
+        if (!$isUpdated) {
+            return $this->SendJson($response, ['status' => false, 'msg' => 'Restrição: ' . $isUpdated, 'id' => 0], 500);
+        }
+        return $this->SendJson($response, ['status' => true, 'msg' => 'Alteração realizada com sucesso!', 'id' => $id], 200);
+    }
     public function insertInstallment($request, $response)
     {
         #Captura os dados do front-end.
         $form = $request->getParsedBody();
-
+        $FieldAndValues = [
+            'id_pagamento' => $form['id'],
+            'parcela' => $form['parcela'],
+            'intervalor' => $form['intervalo'],
+            'alterar_vencimento_conta' => $form['vencimento_incial_parcela']
+        ];
+        $IsSave = InsertQuery::table('installment')->save($FieldAndValues);
+        if (!$IsSave) {
+            $dataResponse = [
+                'status' => false,
+                'msg' => 'Restrição: ' . $IsSave,
+                'id' => 0
+            ];
+            return $this->SendJson($response, $dataResponse, 500);
+        }
+        #Seleciona o ID do ultimo registro da tabela payment_terms.
+        $Id = (array) SelectQuery::select('id')->from('payment_terms')->order('id', 'desc')->fetch();
         $dataResponse = [
             'status' => true,
             'msg' => 'Cadastro realizado com sucesso!',
-            'id' => 123
+            'id' => $Id['id']
         ];
-
         #Retorno de teste.
         return $this->SendJson($response, $dataResponse, 201);
     }
-    public function update($request, $response)
+    public function loaddatainstallments($request, $response)
     {
+        $form = $request->getParsedBody();
+        $idPaymentTerms = $form['id'];
         try {
-            $form = $request->getParsedBody() ?? [];
-            $id = $form['id'] ?? 0;
-
-            $FieldAndValues = [
-                'descricao' => $form['descricao'] ?? '',
-                'ativo' => (isset($form['ativo']) && ($form['ativo'] === true || $form['ativo'] === 'true' || $form['ativo'] === '1')) ? 1 : 0,
-                'data_atualizacao' => date('Y-m-d H:i:s')
-            ];
-
-            $IsUpdate = UpdateQuery::table('payment_terms')
-                ->set($FieldAndValues)
-                ->where('id', '=', $id)
-                ->update();
-
-            if (!$IsUpdate) {
-                $data = [
-                    'status' => false,
-                    'msg' => 'Erro ao atualizar termo de pagamento'
-                ];
-                $payload = json_encode($data);
-                $response->getBody()->write($payload);
-                return $response
-                    ->withHeader('Content-Type', 'application/json')
-                    ->withStatus(200);
-            }
-
-            // Deletar e re-inserir parcelas
-            DeleteQuery::table('payment_installments')
-                ->where('payment_term_id', '=', $id)
-                ->delete();
-
-            if (isset($form['parcelas']) && is_array($form['parcelas'])) {
-                foreach ($form['parcelas'] as $parcela) {
-                    $parcelaData = [
-                        'payment_term_id' => $id,
-                        'numero_parcelas' => (int)($parcela['numero_parcelas'] ?? 0),
-                        'intervalo_dias' => (int)($parcela['intervalo_dias'] ?? 0),
-                        'alterar_vencimento_dias' => (int)($parcela['alterar_vencimento_dias'] ?? 0)
-                    ];
-                    InsertQuery::table('payment_installments')->save($parcelaData);
-                }
-            }
-
-            $data = [
-                'status' => true,
-                'msg' => 'Termo de pagamento atualizado com sucesso'
-            ];
-            $payload = json_encode($data);
-            $response->getBody()->write($payload);
-            return $response
-                ->withHeader('Content-Type', 'application/json')
-                ->withStatus(200);
+            $installments = SelectQuery::select() #Permite selecionar todas as colunas, ou colunas especificas.
+                ->from('installment') #Informa o nome da tabela.
+                ->where('id_pagamento', '=', $idPaymentTerms) #Seleciona somente os registro de parcelas do termo de pagamento informado.
+                ->fetchAll(); #Obter uma lista de todas as parcelas, da condição de pagamento informada.
+            return $this->SendJson($response, ['status' => true, 'data' => $installments]);
         } catch (\Exception $e) {
-            $data = [
-                'status' => false,
-                'msg' => 'Erro: ' . $e->getMessage()
-            ];
-            $payload = json_encode($data);
-            $response->getBody()->write($payload);
-            return $response
-                ->withHeader('Content-Type', 'application/json')
-                ->withStatus(200);
+            return $this->SendJson($response, ['status' => false, 'msg' => 'Restrição: ' . $e->getMessage()], 500);
         }
     }
-
-    public function delete($request, $response)
+    public function deleteinstallment($request, $response)
     {
+        $form = $request->getParsedBody();
+        $idInstallment = $form['id_parcelamento'];
+        if (empty($idInstallment) || is_null($idInstallment)  || $idInstallment === '') {
+            return $this->SendJson($response, ['status' => false, 'msg' => 'Por favor informe o código do parcelamento', 'id' => 0], 403);
+        }
         try {
-            $form = $request->getParsedBody();
-            $id = $form['id'];
-
-            $IsDelete = DeleteQuery::table('payment_terms')
-                ->where('id', '=', $id)
-                ->delete();
-
-            if (!$IsDelete) {
-                $data = [
-                    'status' => false,
-                    'msg' => 'Erro ao deletar termo de pagamento'
-                ];
-                $payload = json_encode($data);
-                $response->getBody()->write($payload);
-                return $response
-                    ->withHeader('Content-Type', 'application/json')
-                    ->withStatus(200);
+            $isDeleted = DeleteQuery::table('installment')->where('id', '=', $idInstallment)->delete();
+            if (!$isDeleted) {
+                return $this->SendJson($response, ['status' => false, 'msg' => 'Restrição: ' . $isDeleted, 'id' => 0], 500);
             }
-
-            $data = [
-                'status' => true,
-                'msg' => 'Termo de pagamento deletado com sucesso'
-            ];
-            $payload = json_encode($data);
-            $response->getBody()->write($payload);
-            return $response
-                ->withHeader('Content-Type', 'application/json')
-                ->withStatus(200);
+            return $this->SendJson($response, ['status' => true, 'msg' => 'Removido com sucesso!', 'id' => $idInstallment], 200);
         } catch (\Exception $e) {
-            $data = [
-                'status' => false,
-                'msg' => 'Erro: ' . $e->getMessage()
-            ];
-            $payload = json_encode($data);
-            $response->getBody()->write($payload);
-            return $response
-                ->withHeader('Content-Type', 'application/json')
-                ->withStatus(200);
+            return $this->SendJson($response, ['status' => false, 'msg' => 'Restrição: ' . $e->getMessage(), 'id' => 0], 500);
         }
     }
 }

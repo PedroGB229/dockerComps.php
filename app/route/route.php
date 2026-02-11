@@ -8,6 +8,7 @@ use app\controller\Fornecedor;
 use app\controller\Login;
 use app\controller\Sale;
 use app\controller\PaymentTerms;
+use app\controller\Product;
 use Slim\Routing\RouteCollectorProxy;
 
 $app->get('/', Home::class . ':home');
@@ -32,11 +33,21 @@ $app->group('/usuario', function (RouteCollectorProxy $group) {
     $group->post('/delete', User::class . ':delete');
     $group->get('/print', User::class . ':print'); 
 });
+$app->group('/produto', function (RouteCollectorProxy $group) {
+    $group->get('/lista', Product::class . ':lista'); 
+    $group->get('/cadastro', Product::class . ':cadastro'); 
+    $group->post('/listproduct', Product::class . ':listproduct');
+    $group->post('/update', Product::class . ':update');
+    $group->post('/insert', Product::class . ':insert');
+    $group->get('/alterar/{id}', Product::class . ':alterar');
+    $group->post('/delete', Product::class . ':delete');
+});
+
 $app->group('/pagamento', function (RouteCollectorProxy $group) {
     $group->get('/lista', PaymentTerms::class . ':lista');
     $group->get('/cadastro', PaymentTerms::class . ':cadastro');
     $group->get('/alterar/{id}', PaymentTerms::class . ':alterar');
-    $group->post('/listTerms', PaymentTerms::class . ':listTerms');
+    $group->post('/listTerms', PaymentTerms::class . ':listaPaymentTerms');
     $group->post('/insert', PaymentTerms::class . ':insert');
     $group->post('/update', PaymentTerms::class . ':update');
     $group->post('/delete', PaymentTerms::class . ':delete');
@@ -44,6 +55,8 @@ $app->group('/pagamento', function (RouteCollectorProxy $group) {
 $app->group('/venda', function (RouteCollectorProxy $group) {
     $group->get('/lista', Sale::class . ':lista');
     $group->get('/cadastro', Sale::class . ':cadastro');
+    $group->post('/insert', Sale::class . ':insert');
+    $group->get('/update', Sale::class . ':update');
 });
 $app->group('/cliente', function (RouteCollectorProxy $group) {
     $group->get('/lista', cliente::class . ':lista'); 

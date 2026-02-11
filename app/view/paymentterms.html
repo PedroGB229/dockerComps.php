@@ -9,120 +9,128 @@
             <div class="col-sm-6">
                 <ol class="breadcrumb float-sm-end">
                     <li class="breadcrumb-item" aria-current="page"><a href="/home">Início</a></li>
-                    <li class="breadcrumb-item active" aria-current="page">Termos de Pagamento</li>
+                    <li class="breadcrumb-item" aria-current="page"><a href="/pagamento/lista">Pesquisa</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">{{titulo}}</li>
                 </ol>
             </div>
         </div>
         <div class="row">
-            <div class="col-12">
-                <div class="card">
-                    <div class="card-header">
-                        <a href="/pagamento/lista" class="btn btn-warning">Voltar</a>
-                    </div>
-                    <div class="card-body">
-                        <form id="formPaymentTerms">
-                            <div class="row mb-3">
-                                <div class="col-md-6">
-                                    <label for="tipo_pagamento" class="form-label">Tipo de Pagamento</label>
-                                    <select class="form-select" id="tipo_pagamento" name="tipo_pagamento">
-                                        <option selected>Selecione uma condição de pagamento</option>
-                                        <option value="1">Pagamento à Vista</option>
-                                        <option value="2">Pagamento Antecipado</option>
-                                        <option value="3">Pagamento a Prazo (Net Terms)</option>
-                                        <option value="4">Pagamento recorrente</option>
-                                        <option value="5">Pagamento Parcelado</option>
-                                        <option value="6">Pix (Imediato, Agendado ou Parcelado)</option>
-                                        <option value="7">Cartão de Crédito</option>
-                                        <option value="8">Cartão de Débito</option>
-                                        <option value="9">Carteiras Digitais (E-wallets)</option>
-                                        <option value="10">Transferência Bancária (TED/DOC)</option>
-                                        <option value="11">Link de Pagamento</option>
-                                        <option value="12">Pagamento na Entrega</option>
-                                        <option value="13">Faturamento (B2B)</option>
-                                        <option value="14">Consignação</option>
-                                    </select>
+            <form id="form">
+                <input type="hidden" name="acao" id="acao" value="{{acao}}">
+                <input type="hidden" name="id" id="id" value="{{id}}">
+                <input type="hidden" name="id_parcelamento" id="id_parcelamento">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <a href="/pagamento/lista" class="btn btn-warning">Voltar</a>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-lg-4 col-md-4 col-md-12">
+                                    <div class="form-floating">
+                                        <select class="form-select" id="codigo" name="codigo">
+                                            <option selected>Selecione uma condição de pagamento</option>
+                                            <option {% if paymentTerms.codigo=='01' %} selected {% endif %} value="01">
+                                                Dinheiro: Pagamento em espécie.</option>
+                                            <option {% if paymentTerms.codigo=='02' %}selected{% endif %} value="02">
+                                                Cheque: Pagamento em cheque.</option>
+                                            <option {% if paymentTerms.codigo=='03' %}selected{% endif %} value="03">
+                                                Cartão de Crédito: Requer dados da operadora.</option>
+                                            <option {% if paymentTerms.codigo=='04' %}selected{% endif %} value="04">
+                                                Cartão de Débito: Requer dados da operadora.</option>
+                                            <option {% if paymentTerms.codigo=='10' %}selected{% endif %} value="10">
+                                                Vale Alimentação, 11 - Refeição, 12 - Presente, 13 - Combustível: Vales
+                                                específicos.</option>
+                                            <option {% if paymentTerms.codigo=='15' %}selected{% endif %} value="15">
+                                                Boleto Bancário: Pagamento via boleto.</option>
+                                            <option {% if paymentTerms.codigo=='17' %}selected{% endif %} value="17">PIX
+                                            </option>
+                                            <option {% if paymentTerms.codigo=='90' %}selected{% endif %} value="90">Sem
+                                                pagamento: Para operações sem circulação financeira.</option>
+                                            <option {% if paymentTerms.codigo=='99' %}selected{% endif %} value="99">
+                                                Outros: Pagamentos não listados. </option>
+                                        </select>
+                                        <label for="codigo">Condição de pagamento EX: (Dinheiro)</label>
+                                    </div>
                                 </div>
-                                <div class="col-md-6">
-                                    <label for="descricao" class="form-label">Condição de pagamento EX. (Dinheiro)</label>
-                                    <input type="text" class="form-control" id="descricao" name="descricao"
-                                        value="{% if termo %}{{ termo.descricao }}{% endif %}" required>
+                                <div class="col-lg-4 col-md-4 col-md-12">
+                                    <div class="form-floating mb-3">
+                                        <input type="text" class="form-control" id="titulo" name="titulo"
+                                            placeholder="name@example.com" value="{{paymentTerms.titulo}}">
+                                        <label for="titulo">Titulo condição pagamento EX: (Dinheiro)</label>
+                                    </div>
                                 </div>
-                            </div>
-
-                            <div class="form-group mb-3">
-                                <div class="form-check">
-                                <input class="form-check-input" type="checkbox" id="ativo" name="ativo" value="true" {%
-                                    if termo and termo.ativo %}checked{% endif %}>
-                                <label class="form-check-label" for="ativo">
-                                    Ativo
-                                </label>
-                            </div>
-
-
-                            <hr>
-                            <h5>Parcelamento</h5>
-
-                            <div class="row mb-3">
-                                <div class="col-md-4">
-                                    <label for="quantidade_parcelas" class="form-label">Quantidade de parcelas</label>
-                                    <input type="number" class="form-control" id="quantidade_parcelas"
-                                        name="quantidade_parcelas" min="1">
-                                </div>
-                                <div class="col-md-4">
-                                    <label for="intervalo_dias" class="form-label">Intervalo em (Dias)</label>
-                                    <input type="number" class="form-control" id="intervalo_dias" name="intervalo_dias"
-                                        min="0" placeholder="Ex. 30 dias">
-                                </div>
-                                <div class="col-md-4">
-                                    <label for="alterar_vencimento" class="form-label">Alterar a data de venc. parcela
-                                        EX. (20 dias)</label>
-                                    <input type="number" class="form-control" id="alterar_vencimento"
-                                        name="alterar_vencimento" min="0">
+                                <div class="col-lg-4 col-md-4 col-md-12">
+                                    <div class="form-floating mb-3">
+                                        <input type="text" class="form-control" id="atalho" name="atalho"
+                                            placeholder="name@example.com" value="{{paymentTerms.atalho}}">
+                                        <label for="atalho">Atalho teclado EX: F6</label>
+                                    </div>
                                 </div>
                             </div>
-
-                            <div class="mb-3">
-                                <button type="button" class="btn btn-info" id="btnAdicionarParcela">Adicionar</button>
+                            <div class="row">
+                                <div class="col-12">
+                                    <hr>
+                                </div>
+                                <div class="col-12">
+                                    <h4>Parcelamento</h4>
+                                </div>
                             </div>
-
-                            <div class="table-responsive">
-                                <table class="table table-striped table-hover">
-                                    <thead>
-                                        <tr>
-                                            <th>Código</th>
-                                            <th>Parcelas</th>
-                                            <th>Intervalo em (Dias)</th>
-                                            <th>Alterar venc. inicial (Dias)</th>
-                                            <th>Ação</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="tabelaParcelas">
-                                        {% if parcelas %}
-                                        {% for parcela in parcelas %}
-                                        <tr class="parcela-row" data-id="{{ parcela.id }}">
-                                            <td>{{ parcela.id }}</td>
-                                            <td>{{ parcela.numero_parcelas }}</td>
-                                            <td>{{ parcela.intervalo_dias }}</td>
-                                            <td>{{ parcela.alterar_vencimento_dias }}</td>
-                                            <td>
-                                                <button type="button"
-                                                    class="btn btn-danger btn-sm btnRemoverParcela">Excluir</button>
-                                            </td>
-                                        </tr>
-                                        {% endfor %}
-                                        {% endif %}
-                                    </tbody>
-                                </table>
+                            <div class="row">
+                                <div class="col-lg-4 col-md-4 col-md-12">
+                                    <div class="form-floating mb-3">
+                                        <input type="text" class="form-control" id="parcela" name="parcela"
+                                            placeholder="name@example.com">
+                                        <label for="parcela">Quantidade de parcelas</label>
+                                    </div>
+                                </div>
+                                <div class="col-lg-4 col-md-4 col-md-12">
+                                    <div class="form-floating mb-3">
+                                        <input type="text" class="form-control" id="intervalo" name="intervalo"
+                                            placeholder="name@example.com">
+                                        <label for="intervalo">Intervalo em dias EX: (30 dias)</label>
+                                    </div>
+                                </div>
+                                <div class="col-lg-4 col-md-4 col-md-12">
+                                    <div class="form-floating mb-3">
+                                        <input type="text" class="form-control" id="vencimento_incial_parcela"
+                                            name="vencimento_incial_parcela" placeholder="name@example.com">
+                                        <label for="vencimento_incial_parcela">Altera a data de venc. parcela EX: (20
+                                            dias)</label>
+                                    </div>
+                                </div>
                             </div>
-
-                            <div class="mt-4">
-                                <button type="submit" class="btn btn-success">Salvar</button>
-                                <input type="hidden" id="id" name="id" value="{% if id %}{{ id }}{% endif %}">
+                            <div class="row">
+                                <div class="col-12">
+                                    <button id="insertInstallmentButton" type="button"
+                                        class="btn btn-info mb-3">Adicionar</button>
+                                </div>
+                                <div class="col-12">
+                                    <table class="table table-striped table-hover table-bordered">
+                                        <thead>
+                                            <tr>
+                                                <th>Código</th>
+                                                <th>Parcelas</th>
+                                                <th>Intervalor em (Dias)</th>
+                                                <th>Alterar venc. inicial (Dias)</th>
+                                                <th>Ação</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="tbInstallments">
+                                            <tr>
+                                                <td class="text-center" colspan="5">Nenhuma parcela cadastrada</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
                             </div>
-                        </form>
+                        </div>
+                        <div class="card-footer">
+                            <button id="insertPaymentoTermsButton" type="button" class="btn btn-success">Salvar</button>
+                        </div>
                     </div>
                 </div>
-            </div>
+            </form>
         </div>
     </div>
 </div>
@@ -130,5 +138,5 @@
 
 {% block script %}
 {% include 'script.html' %}
-<script src="/js/paymentterms.js"></script>
+<script defer type="module" src="/js/paymentterms.js"></script>
 {% endblock %}

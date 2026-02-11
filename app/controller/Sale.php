@@ -24,4 +24,10 @@ class Sale extends Base
             ->withHeader('Content-Type', 'text/html')
             ->withStatus(200);
     }
+     public function insert($request, $response)
+    {
+        $data = $request->getParsedBody();
+        var_dump($data);
+        die;
+    }
 }

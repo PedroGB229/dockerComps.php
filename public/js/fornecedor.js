@@ -16,7 +16,7 @@ $('#rg_ie').inputmask({ "mask": "99.999.999" });
 
 async function insert() {
     //Valida todos os campos do formulário
-    const IsValid = Validate
+    const IsValid = Validate 
         .SetForm('form')//Inform o ID do form
         .Validate();//Aplica a validação no campos 
     if (!IsValid) {

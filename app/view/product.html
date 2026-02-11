@@ -1,0 +1,86 @@
+{% extends "main.html" %}
+{% block main %}
+<div class="container">
+    <div class="row">
+        <form class="row g-3 needs-validation" id="form">
+            <input type="hidden" id="acao" name="acao" value="{{ acao }}">
+            <input type="hidden" id="id" name="id" value="{{ id }}">
+
+            <div class="card-header">
+                <a href="/produto/lista" class="btn btn-outline-warning">Voltar</a>
+            </div>
+
+            <!-- Fornecedor -->
+            <div class="col-md-4">
+                <label for="supplier_id" class="form-label">Fornecedor</label>
+                <select class="form-control" id="supplier_id" name="supplier_id" required>
+                    <option value="">Selecione um fornecedor</option>
+                    {% for supplier in suppliers %}
+                        <option value="{{ supplier.id }}" {% if produto and produto.supplier_id == supplier.id %}selected{% endif %}>
+                            {{ supplier.nome_fantasia }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Nome do Produto -->
+            <div class="col-md-4">
+                <label for="nome" class="form-label">Nome do Produto</label>
+                <input type="text" class="form-control" id="nome" name="nome" placeholder="Digite o nome do produto." required value="{{ produto ? produto.nome : '' }}">
+            </div>
+
+            <!-- Código de Barras -->
+            <div class="col-md-4">
+                <label for="codigo_barras" class="form-label">Código de Barras</label>
+                <input type="text" class="form-control" id="codigo_barras" name="codigo_barras"
+                placeholder="Por favor digite seu código de barras" value="{{ produto ? produto.codigo_barras : '' }}">
+            </div>
+
+            <!-- Descrição Curta -->
+            <div class="col-md-4">
+                <label for="descricao_curta" class="form-label">Descrição Curta</label>
+                <input type="text" class="form-control" id="descricao_curta" name="descricao_curta" placeholder="Digite uma descrição curta" value="{{ produto ? produto.descricao_curta : '' }}">
+            </div>
+
+            <!-- Descrição Detalhada -->
+            <div class="col-md-12">
+                <label for="descricao" class="form-label">Descrição</label>
+                <textarea class="form-control" id="descricao" name="descricao" rows="3" placeholder="Digite a descrição detalhada">{{ produto ? produto.descricao : '' }}</textarea>
+            </div>
+
+            <!-- Preço de Custo -->
+            <div class="col-md-4">
+                <label for="preco_custo" class="form-label">Preço de Custo</label>
+                <input type="text" class="form-control" id="preco_custo" name="preco_custo" placeholder="Digite o preço de custo" required value="{{ produto ? produto.preco_custo : '' }}">
+            </div>
+
+            <!-- Preço de Venda -->
+            <div class="col-md-4">
+                <label for="preco_venda" class="form-label">Preço de Venda</label>
+                <input type="text" class="form-control" id="preco_venda" name="preco_venda" placeholder="Digite o preço de venda" required value="{{ produto ? produto.preco_venda : '' }}">
+            </div>
+
+            <!-- Checkboxes -->
+            <div class="col-md-3 form-check">
+                <input type="checkbox" class="form-check-input" id="ativo" name="ativo">
+                <label class="form-check-label" for="ativo">Ativo</label>
+            </div>
+
+            <div class="col-md-3 form-check">
+                <input type="checkbox" class="form-check-input" id="excluido" name="excluido" >
+                <label class="form-check-label" for="excluido">Excluído</label>
+            </div>
+
+            <!-- Botão Salvar -->
+            <div class="col-12">
+                <button class="btn btn-primary" type="button" id="insert">Salvar</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block script %}
+{% include "script.html" %}
+<script defer type="module" src="/js/produto.js"></script>
+{% endblock %}

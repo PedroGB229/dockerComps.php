@@ -5,11 +5,94 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sistema Comércio - Gestão de Vendas</title>
+    {% include "css.html" %}
     <link rel="stylesheet" href="/css/sale.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 
 <body>
+
+    <div class="modal fade" id="pesquisaProdutoModal" 
+    data-bs-backdrop="static" 
+    data-bs-keyboard="false" tabindex="-1"
+        aria-labelledby="staticBackdropLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h1 class="modal-title fs-5" id="staticBackdropLabel">Pesquisa produto</h1>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <table>
+                        
+                    </table>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-danger" data-bs-dismiss="modal">
+                        Cancelar (F8)
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+
+    <div class="modal fade" id="inserirItemSaleModal" 
+    data-bs-backdrop="static" 
+    data-bs-keyboard="false" tabindex="-1"
+        aria-labelledby="inserirItemSaleLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h1 class="modal-title fs-5" id="inserirItemSaleLabel">Inserir (F9)</h1>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="formItemSale">
+                        <div class="mb-3">
+                            <label for="idProduto" class="form-label">Produto</label>
+                            <select class="form-select" id="idProduto" name="id_product" required>
+                                <option selected>Selecione um produto...</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="quantidade" class="form-label">Quantidade</label>
+                            <input type="number" class="form-control" id="quantidade" name="quantidade" min="1" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="precoUnitario" class="form-label">Preço Unitário</label>
+                            <input type="text" class="form-control" id="precoUnitario" name="preco_unitario" readonly>
+                        </div>
+                        <div class="mb-3">
+                            <label for="descontoItem" class="form-label">Desconto Item</label>
+                            <input type="number" class="form-control" id="descontoItem" name="desconto_item" min="0" step="0.01" value="0">
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" id="btnAdicionarItem">
+                        Inserir (F9)
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     <!-- Sidebar Esquerda -->
     <aside class="sidebar">
         <div class="logo-section">
@@ -61,20 +144,31 @@
             <section class="products-section">
                 <div class="search-box">
                     <h3>Buscar Produtos</h3>
-                    <div class="search-input-wrapper">
-                        <i class="fas fa-barcode"></i>
-                        <input type="text" placeholder="Digite o código ou descrição do produto..."
-                            class="search-input">
-                        <button class="btn-search">
-                            <i class="fas fa-search"></i> Buscar
-                        </button>
+
+                    <div class="row">
+                        <div class="input-group">
+                            <select class="form-select" id="pesquisa" name="pesquisa"
+                                aria-label="Example select with button addon">
+                                <option selected>Digite o id, nome, cód. barra do produto...</option>
+                            </select>
+                            <button class="btn btn-outline-primary" type="button" data-bs-toggle="modal"
+                                data-bs-target="#pesquisaProdutoModal">
+                                <i class="fa-solid fa-magnifying-glass"></i>
+                                Pesquisa
+                            </button>
+                            <button class="btn btn-outline-primary" type="button" data-bs-toggle="modal"
+                                data-bs-target="#inserirItemSaleModal">
+                                <i class="fa-solid fa-plus"></i>
+                                Inserir (F9)
+                            </button>
+                        </div>
                     </div>
                 </div>
 
                 <div class="products-list">
                     <div class="products-header">
                         <h3>Produtos</h3>
-                        <span class="product-count">20 produtos</span>
+                        <span class="product-count" id="total_item">0</span>
                     </div>
 
                     <table class="products-table">
@@ -86,80 +180,7 @@
                                 <th>Ação</th>
                             </tr>
                         </thead>
-                        <tbody>
-                            <tr>
-                                <td>001</td>
-                                <td>Arroz Branco Tipo 1 - 5kg</td>
-                                <td>R$ 24.90</td>
-                                <td><button class="btn-add"><i class="fas fa-plus"></i> Adicionar</button></td>
-                            </tr>
-                            <tr>
-                                <td>002</td>
-                                <td>Feijão Preto - 1kg</td>
-                                <td>R$ 8.50</td>
-                                <td><button class="btn-add"><i class="fas fa-plus"></i> Adicionar</button></td>
-                            </tr>
-                            <tr>
-                                <td>003</td>
-                                <td>Açúcar Refinado - 1kg</td>
-                                <td>R$ 4.20</td>
-                                <td><button class="btn-add"><i class="fas fa-plus"></i> Adicionar</button></td>
-                            </tr>
-                            <tr>
-                                <td>004</td>
-                                <td>Óleo de Soja - 900ml</td>
-                                <td>R$ 7.80</td>
-                                <td><button class="btn-add"><i class="fas fa-plus"></i> Adicionar</button></td>
-                            </tr>
-                            <tr>
-                                <td>005</td>
-                                <td>Café Torrado e Moído - 500g</td>
-                                <td>R$ 12.90</td>
-                                <td><button class="btn-add"><i class="fas fa-plus"></i> Adicionar</button></td>
-                            </tr>
-                            <tr>
-                                <td>006</td>
-                                <td>Leite Integral UHT - 1L</td>
-                                <td>R$ 4.50</td>
-                                <td><button class="btn-add"><i class="fas fa-plus"></i> Adicionar</button></td>
-                            </tr>
-                            <tr>
-                                <td>007</td>
-                                <td>Macarrão Espaguete - 500g</td>
-                                <td>R$ 3.80</td>
-                                <td><button class="btn-add"><i class="fas fa-plus"></i> Adicionar</button></td>
-                            </tr>
-                            <tr>
-                                <td>008</td>
-                                <td>Molho de Tomate - 340g</td>
-                                <td>R$ 2.90</td>
-                                <td><button class="btn-add"><i class="fas fa-plus"></i> Adicionar</button></td>
-                            </tr>
-                            <tr>
-                                <td>009</td>
-                                <td>Farinha de Trigo - 1kg</td>
-                                <td>R$ 5.40</td>
-                                <td><button class="btn-add"><i class="fas fa-plus"></i> Adicionar</button></td>
-                            </tr>
-                            <tr>
-                                <td>010</td>
-                                <td>Sal Refinado - 1kg</td>
-                                <td>R$ 2.20</td>
-                                <td><button class="btn-add"><i class="fas fa-plus"></i> Adicionar</button></td>
-                            </tr>
-                            <tr>
-                                <td>011</td>
-                                <td>Biscoito Recheado - 140g</td>
-                                <td>R$ 3.50</td>
-                                <td><button class="btn-add"><i class="fas fa-plus"></i> Adicionar</button></td>
-                            </tr>
-                            <tr>
-                                <td>012</td>
-                                <td>Refrigerante Cola 2L</td>
-                                <td>R$ 6.90</td>
-                                <td><button class="btn-add"><i class="fas fa-plus"></i> Adicionar</button></td>
-                            </tr>
-                        </tbody>
+                        <tbody></tbody>
                     </table>
                 </div>
             </section>
@@ -231,6 +252,8 @@
             </aside>
         </div>
     </main>
+
+    {% include "script.html" %}
     <script defer type="module" src="/js/sale.js"></script>
 </body>
 
