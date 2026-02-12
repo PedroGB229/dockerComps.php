@@ -2,6 +2,9 @@
 
 namespace app\controller;
 
+use app\database\builder\InsertQuery;
+use app\database\builder\SelectQuery;
+
 class Sale extends Base
 {
     public function cadastro($request, $response)
@@ -27,10 +30,44 @@ class Sale extends Base
     public function insert($request, $response)
     {
         $form = $request->getParsedBody();
-        $id_produto = $form['id_produto'];
-
-        $fieldandValues = [
-            'id_produto' => $id_produto
+        $id_produto = $form['pesquisa'];
+        if (empty($id_produto) or is_null($id_produto)) {
+            return $this->SendJson($response, ['status' => false, 'msg' => 'Restrição O Id do Produto é obrigatório', 'id' => 0], 403);
+        }
+        $customer = SelectQuery::select('id')
+            ->from('customer')
+            ->order('id', 'asc')
+            ->limit(1)
+            ->fetch();
+        if (!$customer) {
+            return $this->SendJson($response, ['status' => false, 'msg' => 'RESTIÇÃO: Nenhum cliente Encontrado!', 'id' => 0], 403);
+        }
+        $id_customer = $customer['id'];
+        $FieldAndValue = [
+            'id_cliente' => $id_customer,
+            'total_bruto' => 0,
+            'total_liquido' => 0,
+            'desconto' => 0,
+            'acrescimo' => 0,
+            'observacao' => ''
         ];
+        try {
+            $IsInserted = InsertQuery::table('sale')->save($FieldAndValue);
+            if (!$IsInserted) {
+                return $this->SendJson($response, ['status' => false, 'msg' => 'Restrição: ao cadastrar venda', 'id' => 0], 403);
+            }
+            $sale = SelectQuery::select('id')
+                ->from('sale')
+                ->order('id', 'desc')
+                ->limit(1)
+                ->fetch();
+            if (!$sale) {
+                return $this->SendJson($response, ['status' => false, 'msg' => 'Restrição: Nenhuma venda Encontrada!', 'id' => 0], 403);
+            }
+            $id_sale = $sale['id'];
+            return $this->SendJson($response, ['status' => true, 'msg' => 'Venda cadastrada com sucesso!', 'id' => $id_sale], 201);
+        } catch (\Exception $e) {
+            return $this->SendJson($response, ['status' => false, 'msg' => 'Restrição: ' . $e->getMessage(), 'id' => 0], 500);
+        }
     }
 }
