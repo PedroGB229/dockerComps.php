@@ -73,8 +73,8 @@ class PaymentTerms extends Base
                 $value['codigo'],
                 $value['titulo'],
                 $value['atalho'],
-                "<button type=\"button\" onclick=\"Editar(" . $value['id'] . ");\" class=\"btn btn-warning\">Editar</button>
-                <button type=\"button\" onclick=\"Delete(" . $value['id'] . ");\" class=\"btn btn-danger\">Excluir</button>"
+                "<button type= 'button' onclick='Editar(" . $value['id'] . ");' class='btn btn-warning'>Editar</button>
+                <button type='button'  onclick='Delete(" . $value['id'] . ");' class='btn btn-danger'>Excluir</button>"
             ];
         }
         $data = [

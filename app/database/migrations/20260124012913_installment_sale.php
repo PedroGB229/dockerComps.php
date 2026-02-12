@@ -21,9 +21,9 @@ final class InstallmentSale extends AbstractMigration
         ->addColumn('data_cadastro', 'datetime', ['null' => true, 'default' => 'CURRENT_TIMESTAMP'])
         ->addColumn('data_atualizacao', 'datetime', ['null' => true, 'default' => 'CURRENT_TIMESTAMP'])
         
-        ->addForeignKey('sale_id', 'sale', 'id', ['delete' => 'CASCADE'])
-        ->addForeignKey('installment_id', 'installment', 'id', ['delete' => 'CASCADE'])
-        ->addForeignKey('payment_terms_id', 'payment_terms', 'id', ['delete' => 'RESTRICT'])
+        ->addForeignKey('sale_id', 'sale', 'id', ['delete'=> 'CASCADE', 'update'=> 'NO ACTION'])
+        ->addForeignKey('installment_id', 'installment', 'id', ['delete'=> 'CASCADE', 'update'=> 'NO ACTION'])
+        ->addForeignKey('payment_terms_id', 'payment_terms', 'id', ['delete'=> 'CASCADE', 'update'=> 'NO ACTION'])
         ->create();
 
     }

@@ -140,22 +140,33 @@ class User extends Base
                 #'ativo' => (isset($form['ativo']) and $form['ativo'] === 'true') ? true : false,
                 #'administrador' => (isset($form['administrador']) and $form['administrador'] === 'true') ? true : false
             ];
-            $IsSave = InsertQuery::table('users')->save($FieldAndValues);
-
-            if (!$IsSave) {
-                $data = ['status' => false, 'msg' => 'Erro ao inserir usuário', 'id' => 0];
-                return $this->SendJson($response, $data, 200);
+            $IsInsert = InsertQuery::table('users')->save($FieldAndValues);
+            if (!$IsInsert) {
+                $data = [
+                    'status' => false,
+                    'msg' => 'Erro ao inserir usuário',
+                    'id' => 0
+                ];
+                $payload = json_encode($data);
+                $response->getBody()->write($payload);
+                return $response
+                    ->withHeader('Content-Type', 'application/json')
+                    ->withStatus(200);
             }
-            
             $id = SelectQuery::select('id')->from('users')->order('id', 'desc')->fetch();
+
             $data = [
                 'status' => true,
-                'msg' => 'Usuário cadastrado com sucesso!',
-                'id' => $id['id'] ?? 0
+                'msg' => 'Cadastro realizado com sucesso! ',
+                'id' => $id['id']
             ];
-             return $this->SendJson($response, $data, 200);
-        } catch (\Throwable $th) {
-            $data = ['status' => false, 'msg' => 'Exceção: ' . $th->getMessage(), 'id' => 0];
+            $payload = json_encode($data);
+            $response->getBody()->write($payload);
+            return $response
+                ->withHeader('Content-Type', 'application/json')
+                ->withStatus(200);
+        } catch (\Exception $e) {
+            $data = ['status' => false, 'msg' => 'Erro: ' . $e->getMessage(), 'id' => 0];
             return $this->SendJson($response, $data, 500);
         }
     }
@@ -241,4 +252,11 @@ class User extends Base
             return $this->SendJson($response, $data, 500);
         }
     }
+        public function print($request, $response)
+    {
+        $html = $this->getHtml('reportuser.html');
+        return $this->printer($html);
+    }
 }
+
+

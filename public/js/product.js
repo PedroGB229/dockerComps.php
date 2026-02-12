@@ -9,7 +9,7 @@ const Form = document.getElementById('form');
 if (!Action) console.error('Elemento "acao" não encontrado no formulário');
 
 // Máscaras
-$('#codigo_barras').inputmask({
+$('#codigo_barra').inputmask({
     mask: "9999999999999",
     placeholder: ""
 });
@@ -95,50 +95,52 @@ async function insert() {
 }
 
 async function update() {
-    if (!Validate.SetForm('form').Validate()) {
-        return Swal.fire({
+    //Valida todos os campos do formulário
+    const IsValid = Validate
+        .SetForm('form')//Inform o ID do form
+        .Validate();//Aplica a validação no campos 
+    if (!IsValid) {
+        Swal.fire({
             icon: "error",
             title: "Por favor preencha corretamente os campos!",
             showConfirmButton: false,
             timer: 3000,
             timerProgressBar: true,
-            didOpen: () => Swal.showLoading()
+            didOpen: () => {
+                Swal.showLoading();
+            }
         });
+        //Em caso de erro encerramos o processo.
+        return;
     }
-
-    try {
-        const response = await Requests.SetForm('form').Post('/produto/update');
-
-        if (!response.status) {
-            return Swal.fire({
-                icon: "error",
-                title: response.msg,
-                showConfirmButton: false,
-                timer: 3000,
-                timerProgressBar: true,
-                didOpen: () => Swal.showLoading()
-            });
-        }
-
+    const response = await Requests.SetForm('form').Post('/produto/update');
+    if (!response.status) {
         Swal.fire({
-            icon: "success",
+            icon: "error",
             title: response.msg,
             showConfirmButton: false,
             timer: 3000,
             timerProgressBar: true,
-            didOpen: () => Swal.showLoading(),
-            willClose: () => window.location.href = '/produto/lista'
+            didOpen: () => {
+                Swal.showLoading();
+            }
         });
-    } catch (error) {
-        console.error(error);
-        Swal.fire({
-            icon: "error",
-            title: "Erro de conexão, tente novamente!",
-            showConfirmButton: false,
-            timer: 3000,
-            timerProgressBar: true
-        });
+        return;
     }
+    Swal.fire({
+        icon: "success",
+        title: response.msg,
+        showConfirmButton: false,
+        timer: 3000,
+        timerProgressBar: true,
+        didOpen: () => {
+            Swal.showLoading();
+        },
+        willClose: () => {
+            //Redireciona automaticamente para a lista de fornecedores
+            window.location.href = '/produto/lista';
+        }
+    });
 }
 
 // Botão salvar

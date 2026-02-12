@@ -42,6 +42,83 @@ class Product extends Base
             ->withHeader('Content-Type', 'text/html')
             ->withStatus(200);
     }
+    public function listproduct($request, $response)
+    {
+        try {
+            $form = $request->getParsedBody();
+
+            $order = $form['order'][0]['column'] ?? 0;
+            $orderType = $form['order'][0]['dir'] ?? 'asc';
+            $start = $form['start'] ?? 0;
+            $length = $form['length'] ?? 10;
+
+            $fields = [
+                0 => 'id',
+                1 => 'nome',
+                2 => 'codigo_barra',
+                3 => 'descricao_curta',
+                4 => 'supplier_id',
+                5 => 'preco_custo',
+                6 => 'preco_venda'
+            ];
+
+            $orderField = $fields[$order] ?? 'id';
+            $term = $form['search']['value'] ?? '';
+
+            $query = SelectQuery::select()
+                ->from('vw_product');
+
+            if (!is_null($term) && $term !== '') {
+                $query->where('product.nome', 'ilike', "%{$term}%", 'or')
+                    ->where('product.descricao_curta', 'ilike', "%{$term}%");
+            }
+
+            $produtos = $query
+                ->order($orderField, $orderType)
+                ->limit($length, $start)
+                ->fetchAll();
+            $totalRecords = count($produtos);
+            $dataRows = [];
+            foreach ($produtos as $key => $value) {
+                $dataRows[$key] = [
+                    $value['id'],
+                    $value['nome'],
+                    $value['codigo_barra'],
+                    $value['descricao_curta'],
+                    $value['supplier_id'],
+                    $value['preco_custo'],
+                    $value['preco_venda'],
+                    "<a href='/produto/alterar/{$value['id']}' class='btn btn-warning'>Editar</a>
+                     <button type='button' onclick='Delete(" . $value['id'] . ");' class='btn btn-danger'>Excluir</button>"
+                ];
+            }
+
+            $data = [
+                'draw' => $form['draw'] ?? 1,
+                'recordsTotal' => $totalRecords,
+                'recordsFiltered' => $totalRecords,
+                'data' => $dataRows
+            ];
+
+            $response->getBody()->write(json_encode($data));
+
+            return $response
+                ->withHeader('Content-Type', 'application/json')
+                ->withStatus(200);
+        } catch (\Throwable $th) {
+            $response->getBody()->write(json_encode([
+                'draw' => $form['draw'] ?? 1,
+                'recordsTotal' => 0,
+                'recordsFiltered' => 0,
+                'data' => [],
+                'error' => $th->getMessage()
+            ]));
+
+            return $response
+                ->withHeader('Content-Type', 'application/json')
+                ->withStatus(200);
+        }
+    }
     public function listproductdata($request, $response)
     {
         $form = $request->getParsedBody();
@@ -59,8 +136,7 @@ class Product extends Base
                 'text' => 'Cód barra: ' . $item['codigo_barra'] . ' - ' . $item['nome']
             ];
         }
-        $data['pagination'] = ['more' => true];
-         return $this->SendJson($response, $data);
+        return $this->SendJson($response, $data);
     }
     public function alterar($request, $response, $args)
     {
@@ -144,61 +220,53 @@ class Product extends Base
             $id = $form['id'];
 
             $FieldsAndValues = [
-                'supplier_id' => $form['supplier_id'],
                 'nome' => $form['nome'],
-                'codigo_barras' => $form['codigo_barras'],
+                'codigo_barra' => $form['codigo_barra'],
                 'descricao_curta' => $form['descricao_curta'],
                 'descricao' => $form['descricao'],
                 'preco_custo' => $form['preco_custo'],
                 'preco_venda' => $form['preco_venda'],
-                'ativo' => isset($form['ativo']),
-                'excluido' => isset($form['excluido']),
-                'data_atualizacao' => date('Y-m-d H:i:s')
+                'ativo' => (isset($form['ativo'])) ? $form['ativo'] : 'false',
             ];
-
-            $IsUpdate = UpdateQuery::table('product')
-                ->set($FieldsAndValues)
-                ->where('id', '=', $id)
-                ->update();
-
+            if (isset($form['supplier_id']) and $form['supplier_id'] !== '') {
+                $FieldsAndValues['supplier_id'] = $form['supplier_id'];
+            }
+            $IsUpdate = UpdateQuery::table('product')->set($FieldsAndValues)->where('id', '=', $id)->update();
             if (!$IsUpdate) {
-                return $this->SendJson($response, [
+                $data = [
                     'status' => false,
                     'msg' => 'Erro ao atualizar produto',
                     'id' => 0
-                ], 200);
+                ];
+                return $this->SendJson($response, $data, 200);
             }
-
-            return $this->SendJson($response, [
+            $data = [
                 'status' => true,
-                'msg' => 'Produto atualizado com sucesso!',
+                'msg' => 'Dados alterados com sucesso!',
                 'id' => $id
-            ], 200);
+            ];
+            return $this->SendJson($response, $data, 200);
         } catch (\Exception $e) {
-            return $this->SendJson($response, [
-                'status' => false,
-                'msg' => 'Exceção: ' . $e->getMessage(),
-                'id' => 0
-            ], 500);
+            $data = ['status' => false, 'msg' => 'Exceção: ' . $e->getMessage(), 'id' => 0];
+            return $this->SendJson($response, $data, 500);
         }
     }
     public function insert($request, $response)
     {
         try {
             $form = $request->getParsedBody();
-
             $FieldsAndValues = [
-                'supplier_id' => $form['supplier_id'],
                 'nome' => $form['nome'],
-                'codigo_barras' => $form['codigo_barras'],
+                'codigo_barra' => $form['codigo_barra'],
                 'descricao_curta' => $form['descricao_curta'],
                 'descricao' => $form['descricao'],
                 'preco_custo' => $form['preco_custo'],
                 'preco_venda' => $form['preco_venda'],
-                'ativo' => ($form['ativo']),
-                'excluido' => ($form['excluido'])
+                'ativo' => ($form['ativo'])
             ];
-
+            if (isset($form['supplier_id']) and $form['supplier_id'] !== '') {
+                $FieldsAndValues['supplier_id'] = $form['supplier_id'];
+            }
             $IsSave = InsertQuery::table('product')->save($FieldsAndValues);
 
             if (!$IsSave) {

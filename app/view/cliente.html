@@ -6,26 +6,30 @@
             <input type="hidden" id="acao" name="acao" value="{{ acao }}">
             <input type="hidden" id="id" name="id" value="{{ id }}">
             <div class="card-header">
-                    <a href="/cliente/lista" class="btn btn-outline-warning">Voltar</a>
+                <a href="/cliente/lista" class="btn btn-outline-warning">Voltar</a>
             </div>
             <div class="col-md-4">
                 <label for="nome_fantasia" class="form-label">Nome Fantasia</label>
-                <input type="text" class="form-control" id="nome_fantasia" name="nome_fantasia" placeholder="Digite seu nome_fantasia." required value="{{ cliente ? cliente.nome_fantasia : '' }}">
+                <input type="text" class="form-control" id="nome_fantasia" name="nome_fantasia"
+                    placeholder="Digite seu nome_fantasia." required value="{{ cliente ? cliente.nome_fantasia : '' }}">
             </div>
             <div class="col-md-4">
                 <label for="sobrenome_razao" class="form-label">Razão Social</label>
                 <input type="text" class="form-control" id="sobrenome_razao" name="sobrenome_razao"
-                placeholder="Por favor digite seu sobrenome_razao" required value="{{ cliente ? cliente.sobrenome_razao : '' }}">
+                    placeholder="Por favor digite seu sobrenome_razao" required
+                    value="{{ cliente ? cliente.sobrenome_razao : '' }}">
             </div>
             <div class="col-md-4">
                 <label for="cpf_cnpj" class="form-label">CPF/CNPJ</label>
-                <input type="text" class="form-control" id="cpf_cnpj" name="cpf_cnpj" placeholder="Por favor digite seu cpf_cnpj"
-                required data-rule-cpfOrCnpj="true" value="{{ cliente ? cliente.cpf_cnpj : '' }}">
+                <input type="text" class="form-control" id="cpf_cnpj" name="cpf_cnpj"
+                    placeholder="Por favor digite seu cpf_cnpj" required data-rule-cpfOrCnpj="true"
+                    value="{{ cliente ? cliente.cpf_cnpj : '' }}">
                 <small class="form-text text-muted">Digite um CPF (000.000.000-00) ou CNPJ (00.000.000/0000-00)</small>
             </div>
             <div class="col-md-6">
                 <label for="rg_ie" class="form-label">RG/IE</label>
-                <input type="text" class="form-control" id="rg_ie" name="rg_ie" placeholder="Digite seu rg_ie" required data-rule-rg="true" value="{{ cliente ? cliente.rg_ie : '' }}">
+                <input type="text" class="form-control" id="rg_ie" name="rg_ie" placeholder="Digite seu rg_ie" required
+                    data-rule-rg="true" value="{{ cliente ? cliente.rg_ie : '' }}">
                 <div class="invalid-feedback">
                     RG/IE inválido
                 </div>

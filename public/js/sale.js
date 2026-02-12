@@ -1,6 +1,6 @@
-import { Requests } from "./Requests";
 import { Validate } from "./Validate";
 
+const insertItemButton = document.getElementById('insertItemButton');
 // Atualizar relógio em tempo real
 function updateClock() {
     const now = new Date();
@@ -33,22 +33,21 @@ function updateClock() {
 // Atualizar a cada segundo
 setInterval(updateClock, 1000);
 updateClock();
-async function Insert() {
-    //Valida todos os campos do formulário
-    const IsValid = Validate.SetForm('form').Validate();
-    if (!IsValid) {
+
+async function InsertSale() {
+    const valid = Validate.SetForm('form').Validate();
+    if (!valid) {
         Swal.fire({
-            icon: "error",
-            title: "Error",
-            text: "Por favor preencha corretamente os campos!",
+            icon: 'error',
+            title: 'Erro',
+            text: 'Por favor, preencha os campos corretamente.',
             time: 2000,
             progressBar: true,
         });
-        //Em caso de erro encerramos o processo.
         return;
     }
     try {
-    const response = await Requests.SetForm('form').Post();
+        const response = await Request.SetForm('form').Post('/venda/insert');
     } catch (error) {
         throw new Error(error);
     }
@@ -157,65 +156,6 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    // Botão adicionar item à venda
-    const btnAdicionarItem = document.getElementById('btnAdicionarItem');
-    if (btnAdicionarItem) {
-        btnAdicionarItem.addEventListener('click', function () {
-            const idProduto = document.getElementById('idProduto').value;
-            const quantidade = document.getElementById('quantidade').value;
-            const precoUnitario = document.getElementById('precoUnitario').value;
-            const descontoItem = document.getElementById('descontoItem').value || 0;
-
-            if (!idProduto || idProduto === '' || quantidade === '' || precoUnitario === '') {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Erro',
-                    text: 'Preencha todos os campos obrigatórios!',
-                    timer: 3000
-                });
-                return;
-            }
-
-            // Adicionar item ao carrinho
-            const item = {
-                id_product: idProduto,
-                quantidade: parseInt(quantidade),
-                preco_unitario: parseFloat(precoUnitario),
-                desconto_item: parseFloat(descontoItem),
-                preco_total: (parseInt(quantidade) * parseFloat(precoUnitario)) - parseFloat(descontoItem)
-            };
-
-            console.log('Item adicionado:', item);
-
-            // Limpar formulário
-            document.getElementById('formItemSale').reset();
-            document.getElementById('precoUnitario').value = '';
-
-            // Fechar modal
-            const modal = bootstrap.Modal.getInstance(document.getElementById('inserirItemSaleModal'));
-            if (modal) {
-                modal.hide();
-            }
-
-            Swal.fire({
-                icon: 'success',
-                title: 'Sucesso',
-                text: 'Item adicionado ao carrinho!',
-                timer: 2000
-            });
-        });
-    }
-
-    // Preencher preço unitário quando selecionar produto
-    const idProduto = document.getElementById('idProduto');
-    if (idProduto) {
-        idProduto.addEventListener('change', function () {
-            // Aqui você faria uma requisição AJAX para pegar o preço do produto
-            // Por enquanto, deixaremos para ser preenchido manualmente
-            document.getElementById('precoUnitario').value = '';
-        });
-    }
-
     // Botão cancelar venda
     const cancelButton = document.querySelector('.btn-cancel');
     if (cancelButton) {
@@ -236,24 +176,6 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 });
-// Atalhos de teclado
-document.addEventListener('keydown', function (e) {
-    // F2 - Focar no campo de busca
-    if (e.key === 'F2') {
-        e.preventDefault();
-        document.querySelector('.search-input')?.focus();
-    }
-    // F9 - Finalizar venda
-    if (e.key === 'F9') {
-        e.preventDefault();
-        document.querySelector('.btn-finalize')?.click();
-    }
-    // Esc - Cancelar venda
-    if (e.key === 'Escape') {
-        e.preventDefault();
-        document.querySelector('.btn-cancel')?.click();
-    }
-});
 // Feedback visual para cliques
 document.addEventListener('click', function (e) {
     if (e.target.matches('button')) {
@@ -261,21 +183,42 @@ document.addEventListener('click', function (e) {
     }
 });
 
+insertItemButton.addEventListener('click', async () => {
+    alert('Clickou no item');
+});
+
 document.addEventListener('keydown', (e) => {
-    //Fechamos o modal com a tecla F3
+    //Bloque a ação de teclas F4, F8 e F9, F12 para evitar ações indesejadas
+    //e.preventDefault();
+    //Abrimos o modal de pesquisa de produto com a tecla F4
+    if (e.key === 'F4') {
+        const myModalEl = document.getElementById('pesquisaProdutoModal');
+        const modal = new bootstrap.Modal(myModalEl);
+        modal.show();
+    }
+    //Fechamos o modal de pesquisa de produto com a tecla F8
     if (e.key === 'F8') {
         const myModalEl = document.getElementById('pesquisaProdutoModal');
-        const modal = bootstrap.Modal.getInstance(myModalEl);
+        const modal = new bootstrap.Modal(myModalEl);
         modal.hide();
+    }
+    //Inserimos o item da venda com a tecla F9
+    if (e.key === 'F9') {
+        alert('olá');
     }
 });
 
-$("#pesquisa").select2({
-    theme: "bootstrap-5",
+$('#pesquisa').select2({
+    theme: 'bootstrap-5',
     placeholder: "Selecione um produto",
+    language: "pt-BR",
     ajax: {
-        url: "/produto/listproductdata",
-        type: "POST",
-        delay: 250
+        url: '/produto/listproductdata',
+        type: 'POST'
     }
+});
+$('.form-select').on('select2:open', function (e) {
+    let inputElement = document.querySelector('.select2-search__field');
+    inputElement.placeholder = 'Digite para pesquisar...';
+    inputElement.focus();
 });

@@ -11,7 +11,7 @@ trait Template
         try {
             $twig = Twig::create(DIR_VIEW);
             #Adicionamos uma varaivel de template Global acessivel de qualquer template
-            $twig->getEnvironment()->addGlobal('EMPRESA', 'KittySoft');
+            $twig->getEnvironment()->addGlobal('EMPRESA', 'Gambiarra&CIA');
             return $twig;
         } catch (\Exception $e) {
             throw new \Exception("Restrição: " . $e->getMessage());
@@ -30,5 +30,17 @@ trait Template
         return $response
             ->withHeader('Content-Type', 'application/json')
             ->withStatus($statusCode);
+    }
+    public function getHtml(
+        string $templateName = '',
+        array $data = []
+    ): string {
+        $viewsPath = DIR_VIEW . '/reports/';
+        $safeData = is_array($data) ? $data : [];
+        $twig = Twig::create($viewsPath, $safeData);
+        #Remove erros de string
+        $html = $twig->fetch($templateName, $safeData);
+        #$html = $twig('/>\s+</', '><', $html);
+        return $html;
     }
 }

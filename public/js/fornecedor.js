@@ -12,11 +12,11 @@ if (!Action) {
 
 // Aplicar máscaras
 $('#cpf_cnpj').inputmask({ "mask": ["999.999.999-99", "99.999.999/9999-99"] });
-$('#rg_ie').inputmask({ "mask": "99.999.999" });
+$('#rg_ie').inputmask({ "mask": "999.999.999" });
 
 async function insert() {
     //Valida todos os campos do formulário
-    const IsValid = Validate 
+    const IsValid = Validate
         .SetForm('form')//Inform o ID do form
         .Validate();//Aplica a validação no campos 
     if (!IsValid) {

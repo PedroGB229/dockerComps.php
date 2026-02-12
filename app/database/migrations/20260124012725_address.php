@@ -27,10 +27,10 @@ final class Address extends AbstractMigration
             ->addColumn('data_cadastro', 'datetime', ['null' => true, 'default' => 'CURRENT_TIMESTAMP'])
             ->addColumn('data_atualizacao', 'datetime', ['null' => true, 'default' => 'CURRENT_TIMESTAMP'])
         
-        ->addForeignKey('id_customer', 'customer', 'id', ['delete'=> 'RESTRICT', 'update'=> 'CASCADE'])
-        ->addForeignKey('id_users', 'users', 'id', ['delete'=> 'RESTRICT', 'update'=> 'CASCADE'])
-        ->addForeignKey('id_supplier', 'supplier', 'id', ['delete'=> 'RESTRICT', 'update'=> 'CASCADE'])
-        ->addForeignKey('id_company', 'company', 'id', ['delete'=> 'RESTRICT', 'update'=> 'CASCADE'])
+        ->addForeignKey('id_customer', 'customer', 'id', ['delete'=> 'CASCADE', 'update'=> 'NO ACTION'])
+        ->addForeignKey('id_users', 'users', 'id', ['delete'=> 'CASCADE', 'update'=> 'NO ACTION'])
+        ->addForeignKey('id_supplier', 'supplier', 'id', ['delete'=> 'CASCADE', 'update'=> 'NO ACTION'])
+        ->addForeignKey('id_company', 'company', 'id', ['delete'=> 'CASCADE', 'update'=> 'NO ACTION'])
         ->create();
 
     }

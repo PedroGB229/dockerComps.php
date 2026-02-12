@@ -12,7 +12,7 @@ if (!Action) {
 
 // Aplicar máscaras
 $('#cpf_cnpj').inputmask({ "mask": ["999.999.999-99", "99.999.999/9999-99"] });
-$('#rg_ie').inputmask({ "mask": "99999" });
+$('#rg_ie').inputmask({ "mask": "99.999.999" });
 
 async function insert() {
     //Valida todos os campos do formulário

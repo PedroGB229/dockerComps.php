@@ -11,9 +11,7 @@
 
 <body>
 
-    <div class="modal fade" id="pesquisaProdutoModal" 
-    data-bs-backdrop="static" 
-    data-bs-keyboard="false" tabindex="-1"
+    <div class="modal fade" id="pesquisaProdutoModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
         aria-labelledby="staticBackdropLabel" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
@@ -23,7 +21,7 @@
                 </div>
                 <div class="modal-body">
                     <table>
-                        
+
                     </table>
                 </div>
                 <div class="modal-footer">
@@ -34,65 +32,6 @@
             </div>
         </div>
     </div>
-
-
-
-
-    <div class="modal fade" id="inserirItemSaleModal" 
-    data-bs-backdrop="static" 
-    data-bs-keyboard="false" tabindex="-1"
-        aria-labelledby="inserirItemSaleLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h1 class="modal-title fs-5" id="inserirItemSaleLabel">Inserir (F9)</h1>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <form id="formItemSale">
-                        <div class="mb-3">
-                            <label for="idProduto" class="form-label">Produto</label>
-                            <select class="form-select" id="idProduto" name="id_product" required>
-                                <option selected>Selecione um produto...</option>
-                            </select>
-                        </div>
-                        <div class="mb-3">
-                            <label for="quantidade" class="form-label">Quantidade</label>
-                            <input type="number" class="form-control" id="quantidade" name="quantidade" min="1" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="precoUnitario" class="form-label">Preço Unitário</label>
-                            <input type="text" class="form-control" id="precoUnitario" name="preco_unitario" readonly>
-                        </div>
-                        <div class="mb-3">
-                            <label for="descontoItem" class="form-label">Desconto Item</label>
-                            <input type="number" class="form-control" id="descontoItem" name="desconto_item" min="0" step="0.01" value="0">
-                        </div>
-                    </form>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="button" class="btn btn-primary" id="btnAdicionarItem">
-                        Inserir (F9)
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     <!-- Sidebar Esquerda -->
     <aside class="sidebar">
         <div class="logo-section">
@@ -140,29 +79,32 @@
 
         <!-- Área de Conteúdo -->
         <div class="content-wrapper">
+
             <!-- Seção de Produtos -->
             <section class="products-section">
                 <div class="search-box">
-                    <h3>Buscar Produtos</h3>
-
-                    <div class="row">
-                        <div class="input-group">
-                            <select class="form-select" id="pesquisa" name="pesquisa"
-                                aria-label="Example select with button addon">
-                                <option selected>Digite o id, nome, cód. barra do produto...</option>
-                            </select>
-                            <button class="btn btn-outline-primary" type="button" data-bs-toggle="modal"
-                                data-bs-target="#pesquisaProdutoModal">
-                                <i class="fa-solid fa-magnifying-glass"></i>
-                                Pesquisa
-                            </button>
-                            <button class="btn btn-outline-primary" type="button" data-bs-toggle="modal"
-                                data-bs-target="#inserirItemSaleModal">
-                                <i class="fa-solid fa-plus"></i>
-                                Inserir (F9)
-                            </button>
+                    <form id="form">
+                        <input type="text" id="id" name="id">
+                        <input type="text" id="acao" name="acao">
+                        <h3>Buscar Produtos</h3>
+                        <div class="row">
+                            <div class="input-group">
+                                <select class="form-select" id="pesquisa" name="pesquisa"
+                                    aria-label="Example select with button addon" required>
+                                    <option selected>Digite o id, nome, cód. barra do produto...</option>
+                                </select>
+                                <button class="btn btn-outline-primary" type="button" data-bs-toggle="modal"
+                                    data-bs-target="#pesquisaProdutoModal">
+                                    <i class="fa-solid fa-magnifying-glass"></i>
+                                    Pesquisa (F4)
+                                </button>
+                                <button class="btn btn-outline-primary" type="button" id="insertItemButton">
+                                    <i class="fa-solid fa-plus"></i>
+                                    Inserir (F9)
+                                </button>
+                            </div>
                         </div>
-                    </div>
+                    </form>
                 </div>
 
                 <div class="products-list">
@@ -184,51 +126,25 @@
                     </table>
                 </div>
             </section>
-
             <!-- Seção do Carrinho -->
             <aside class="cart-section">
-                <div class="cart-header">
-                    <i class="fas fa-shopping-cart"></i>
-                    <h3>Carrinho de Compras</h3>
-                </div>
-
-                <div class="cart-empty">
-                    <i class="fas fa-shopping-cart"></i>
-                    <p>Carrinho vazio</p>
-                </div>
-
                 <div class="payment-section">
-                    <h4>Pagamento</h4>
-
-                    <div class="payment-methods">
-                        <p class="payment-label">Forma de Pagamento</p>
-                        <div class="payment-buttons">
-                            <button class="payment-btn active">
-                                <i class="fas fa-money-bill-wave"></i>
-                                <span>Dinheiro</span>
-                            </button>
-                            <button class="payment-btn">
-                                <i class="fas fa-credit-card"></i>
-                                <span>Cartão</span>
-                            </button>
-                            <button class="payment-btn">
-                                <i class="fas fa-mobile-alt"></i>
-                                <span>Pix</span>
-                            </button>
-                        </div>
-                    </div>
-
                     <div class="discount-section">
                         <p class="discount-label">
                             <i class="fas fa-percent"></i> Desconto
                         </p>
-                        <div class="discount-inputs">
-                            <input type="text" placeholder="R$" class="discount-input-rs">
-                            <input type="text" placeholder="%" class="discount-input-percent">
-                        </div>
-                        <input type="number" value="0" class="discount-value">
-                    </div>
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="input-group">
+                                    <input type="text" placeholder="Desconto em R$" aria-label="First name"
+                                        class="form-control">
 
+                                    <input type="text" placeholder="Juros em R$" aria-label="Last name"
+                                        class="form-control">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                     <div class="total-section">
                         <div class="subtotal">
                             <span>Subtotal:</span>
