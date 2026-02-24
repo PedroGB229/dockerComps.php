@@ -14,11 +14,16 @@ final class Contact extends AbstractMigration
         ->addColumn('id_users', 'biginteger')
         ->addColumn('id_customer', 'biginteger')
         ->addColumn('id_company', 'biginteger')
+        ->addColumn('tipo', 'text', ['null' => true])
+        ->addColumn('endereco_contato', 'text', ['null' => true])
         ->addColumn('documento', 'string', ['limit' => 30])
         ->addColumn('email', 'string', ['limit' => 150])
         ->addColumn('telefone', 'string', ['limit' => 30])
         ->addColumn('data_cadastro', 'datetime', ['null' => true, 'default' => 'CURRENT_TIMESTAMP'])
         ->addColumn('data_atualizacao', 'datetime', ['null' => true, 'default' => 'CURRENT_TIMESTAMP'])
+        ->addForeignKey('id_customer', 'customer', 'id', ['delete'=> 'CASCADE', 'update'=> 'NO ACTION'])
+        ->addForeignKey('id_users', 'users', 'id', ['delete'=> 'CASCADE', 'update'=> 'NO ACTION'])
+        ->addForeignKey('id_company', 'company', 'id', ['delete'=> 'CASCADE', 'update'=> 'NO ACTION'])
         ->create();
     }
 }
