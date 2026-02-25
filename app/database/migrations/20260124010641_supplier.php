@@ -6,10 +6,13 @@ use Phinx\Migration\AbstractMigration;
 
 final class Supplier extends AbstractMigration
 {
-   
     public function change(): void
     {
-        $table = $this->table('supplier', ['id' => false, 'primary_key' => ['id']]);
+        $table = $this->table('supplier', [
+            'id' => false,
+            'primary_key' => ['id'],
+            'comment' => 'Tabela responsável por guardar dodados de fornecedor.'
+        ]);
         $table->addColumn('id', 'biginteger', ['identity' => true, 'null' => false])
             ->addColumn('nome_fantasia', 'text', ['null' => true])
             ->addColumn('sobrenome_razao', 'text', ['null' => true])
@@ -18,6 +21,6 @@ final class Supplier extends AbstractMigration
             ->addColumn('ativo', 'boolean', ['null' => true])
             ->addColumn('data_cadastro', 'datetime', ['null' => true, 'default' => 'CURRENT_TIMESTAMP'])
             ->addColumn('data_atualizacao', 'datetime', ['null' => true, 'default' => 'CURRENT_TIMESTAMP'])
-         ->create();
+            ->create();
     }
 }
