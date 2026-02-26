@@ -1,22 +1,15 @@
 import { Validate } from "./Validate.js";
 import { Requests } from "./Requests.js";
 
-const InsertButton = document.getElementById('insert');
+const Salvar = document.getElementById('salvar');
 const FieldPassword = document.getElementById('campo_senha');
 const Action = document.getElementById('acao');
 
-// Verifica se Action existe antes de usar
-if (!Action) {
-    console.error('Elemento acao não encontrado no formulário');
-}
-
-// Aplicar máscaras
 $('#cpf_cnpj').inputmask({ "mask": ["999.999.999-99", "99.999.999/9999-99"] });
-$('#rg_ie').inputmask({ "mask": "99.999.999" });
 
 async function insert() {
     //Valida todos os campos do formulário
-    const IsValid = Validate
+    /*const IsValid = Validate
         .SetForm('form')//Inform o ID do form
         .Validate();//Aplica a validação no campos 
     if (!IsValid) {
@@ -32,7 +25,7 @@ async function insert() {
         });
         //Em caso de erro encerramos o processo.
         return;
-    }
+    }*/
     const response = await Requests.SetForm('form').Post('/cliente/insert');
     if (!response.status) {
         Swal.fire({
@@ -50,6 +43,8 @@ async function insert() {
     document.getElementById('acao').value = 'e';
     //Setamos o valor do campos ID para que se necessário alterar o registro
     document.getElementById('id').value = response.id;
+    //Modifica a URL da aplicação sem recarregar
+    history.pushState(`/cliente/alterar/${response.id}`, '', `/cliente/alterar/${response.id}`);
     Swal.fire({
         icon: "success",
         title: response.msg,
@@ -58,15 +53,11 @@ async function insert() {
         timerProgressBar: true,
         didOpen: () => {
             Swal.showLoading();
-        },
-        willClose: () => {
-            //Redireciona automaticamente para a lista de clientes após insert bem-sucedido
-            window.location.href = '/cliente/lista';
         }
     });
 }
 async function update() {
-    //Valida todos os campos do formulário
+    /*//Valida todos os campos do formulário
     const IsValid = Validate
         .SetForm('form')//Inform o ID do form
         .Validate();//Aplica a validação no campos 
@@ -83,7 +74,7 @@ async function update() {
         });
         //Em caso de erro encerramos o processo.
         return;
-    }
+    }*/
     const response = await Requests.SetForm('form').Post('/cliente/update');
     if (!response.status) {
         Swal.fire({
@@ -106,23 +97,15 @@ async function update() {
         timerProgressBar: true,
         didOpen: () => {
             Swal.showLoading();
-        },
-        willClose: () => {
-            //Redireciona automaticamente para a lista de clientes
-            window.location.href = '/cliente/lista';
         }
     });
 }
-InsertButton.addEventListener('click', async () => {
-    if (Action) {
-        (Action.value === 'c') ? (FieldPassword ? FieldPassword.classList.remove('d-none') : null) : (FieldPassword ? FieldPassword.classList.add('d-none') : null);
-        (Action.value === 'c') ? await insert() : await update();
-    } else {
-        console.error('Action não está definido');
-    }
-});
-document.addEventListener('DOMContentLoaded', async () => {
-    if (Action && FieldPassword) {
-        (Action.value === 'c') ? FieldPassword.classList.remove('d-none') : FieldPassword.classList.add('d-none');
-    }
+Salvar.addEventListener('click', async () => {
+    (Action.value === 'c') ? await insert() : await update();
+
+    const ativoInput = document.getElementById('ativo');
+    const dados = {
+        nome_fantasia: document.getElementById('nome_fantasia').value,
+        ativo: ativoInput.type === 'checkbox' ? ativoInput.checked : ativoInput.value === 'true'
+    };
 });

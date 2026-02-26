@@ -1,6 +1,4 @@
-import { DataTables } from "./DataTables.js";
-
-const tabela = new $("#tabela").DataTable({
+const conf = {
     paging: true,
     lengthChange: true,
     searching: true,
@@ -17,7 +15,7 @@ const tabela = new $("#tabela").DataTable({
         searchPlaceholder: 'Digite sua pesquisa...'
     },
     ajax: {
-        url: '/pagamento/listaPaymentTerms',
+        url: '/pagamento/listapaymentterms',
         type: 'POST'
     },
     layout: {
@@ -59,42 +57,6 @@ const tabela = new $("#tabela").DataTable({
             }
         }, 100);
     }
-});
+};
 
-async function Delete(id) {
-    const formData = new FormData();
-    formData.append('id', id);
-
-    const response = await fetch('/paymentterms/delete', {
-        method: 'POST',
-        body: formData
-    });
-
-    const data = await response.json();
-
-    if (!data.status) {
-        Swal.fire({
-            title: "Erro ao remover!",
-            icon: "error",
-            html: data.msg,
-            timer: 3000,
-            timerProgressBar: true,
-            didOpen: () => {
-                Swal.showLoading();
-            }
-        });
-        return;
-    }
-    Swal.fire({
-        title: "Removido com sucesso!",
-        icon: "success",
-        html: data.msg,
-        timer: 3000,
-        timerProgressBar: true,
-        didOpen: () => {
-            Swal.showLoading();
-        }
-    });
-    tabela.ajax.reload();
-}
-window.Delete = Delete;
+const table = new $("#tabela").DataTable(conf);

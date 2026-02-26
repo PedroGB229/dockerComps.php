@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,9 +7,7 @@
     {% include "css.html" %}
     <link rel="stylesheet" href="/css/sale.css">
 </head>
-
 <body>
-
     <div class="modal fade" id="pesquisaProdutoModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
         aria-labelledby="staticBackdropLabel" aria-hidden="true">
         <div class="modal-dialog">
@@ -32,27 +29,22 @@
             </div>
         </div>
     </div>
-    <!-- Sidebar Esquerda -->
     <aside class="sidebar">
         <div class="logo-section">
             <h1 class="logo">Obrigado</h1>
             <p class="slogan">Sua preferência<br>é a nossa maior<br>motivação.</p>
         </div>
-
         <div class="sidebar-image">
-            <img src="merchant-image.jpg" alt="Atendente">
+            <img src="/images/baleia.png" alt="Baleia">
         </div>
-
         <div class="sidebar-footer">
             <div class="footer-logo">
                 <i class="fas fa-handshake"></i>
-                <span>GUILHES</span>
+                <span>BALEIA</span>
             </div>
         </div>
     </aside>
-    <!-- Conteúdo Principal -->
     <main class="main-content">
-        <!-- Header -->
         <header class="header">
             <div class="header-left">
                 <div class="system-icon">
@@ -76,22 +68,85 @@
                 <button class="icon-btn"><i class="fas fa-sign-out-alt"></i></button>
             </div>
         </header>
-
-        <!-- Área de Conteúdo -->
         <div class="content-wrapper">
-
-            <!-- Seção de Produtos -->
             <section class="products-section">
                 <div class="search-box">
                     <form id="form">
-                        <input type="text" id="id" name="id">
-                        <input type="text" id="acao" name="acao">
+                        <input type="hidden" id="acao" name="acao" value="{{acao}}">
+                        <input type="hidden" id="id" name="id" value="{{id}}">
+                        <div class="modal fade" id="pagamentoVenda" data-bs-backdrop="static" data-bs-keyboard="false"
+                            tabindex="-1" aria-labelledby="pagamentoVendaLabel" aria-hidden="true">
+                            <div class="modal-dialog modal-lg">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h1 class="modal-title fs-5" id="pagamentoVendaLabel">Pagamento</h1>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                            aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <div class="row g-2">
+                                            <div class="col-md">
+                                                <div class="form-floating">
+                                                    <select class="form-select" id="condicaoPagamento"
+                                                        name="condicaoPagamento">
+                                                        <option selected>Open this select menu</option>
+                                                        <option value="1">One</option>
+                                                        <option value="2">Two</option>
+                                                        <option value="3">Three</option>
+                                                    </select>
+                                                    <label for="condicaoPagamento">Selecione a condição de
+                                                        pagamento</label>
+                                                </div>
+                                            </div>
+                                            <div class="col-md">
+                                                <div class="form-floating">
+                                                    <input type="text" class="form-control" id="valorPago"
+                                                        name="valorPago" placeholder="name@example.com" value="R$ 0,00">
+                                                    <label for="valorPago">Informe o valor</label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="row g-2 mt-2">
+                                            <div class="col-md">
+                                                <div class="form-floating">
+                                                    <select class="form-select" id="parcelas" name="parcelas">
+                                                        <option selected>Open this select menu</option>
+                                                        <option value="1">One</option>
+                                                        <option value="2">Two</option>
+                                                        <option value="3">Three</option>
+                                                    </select>
+                                                    <label for="parcelas">Selecione a quantidade de parcelas</label>
+                                                </div>
+                                            </div>
+                                            <div class="col-md">
+                                                <div class="form-floating">
+                                                    <input type="text" class="form-control" id="diaVencimento"
+                                                        name="diaVencimento" placeholder="name@example.com">
+                                                    <label for="diaVencimento">Selecione dia de vencimento</label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="row g-2 mt-2">
+                                            <div class="col-6">
+                                                <button type="button" class="btn-finalize">Adicionar</button>
+                                            </div>
+                                        </div>
+                                        <div class="row g-2 mt-2">
+
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn-finalize">Concluir</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                         <h3>Buscar Produtos</h3>
                         <div class="row">
                             <div class="input-group">
                                 <select class="form-select" id="pesquisa" name="pesquisa"
                                     aria-label="Example select with button addon" required>
-                                    <option selected>Digite o id, nome, cód. barra do produto...</option>
+                                    <option value="" selected>Digite o id, nome, cód. barra do produto...</option>
                                 </select>
                                 <button class="btn btn-outline-primary" type="button" data-bs-toggle="modal"
                                     data-bs-target="#pesquisaProdutoModal">
@@ -106,13 +161,11 @@
                         </div>
                     </form>
                 </div>
-
                 <div class="products-list">
                     <div class="products-header">
                         <h3>Produtos</h3>
-                        <span class="product-count" id="total_item">0</span>
+                        <span class="product-count" id="product-count">0</span>
                     </div>
-
                     <table class="products-table">
                         <thead>
                             <tr>
@@ -122,11 +175,10 @@
                                 <th>Ação</th>
                             </tr>
                         </thead>
-                        <tbody></tbody>
+                        <tbody id="products-table-tbody"></tbody>
                     </table>
                 </div>
             </section>
-            <!-- Seção do Carrinho -->
             <aside class="cart-section">
                 <div class="payment-section">
                     <div class="discount-section">
@@ -148,16 +200,15 @@
                     <div class="total-section">
                         <div class="subtotal">
                             <span>Subtotal:</span>
-                            <span class="amount">R$ 0,00</span>
+                            <span id="amount" class="amount">R$ 0,00</span>
                         </div>
                         <div class="total">
                             <span>Total:</span>
-                            <span class="total-amount">R$ 0,00</span>
+                            <span id="total-amount" class="total-amount">R$ 0,00</span>
                         </div>
                     </div>
-
                     <div class="action-buttons">
-                        <button class="btn-finalize">
+                        <button class="btn-finalize" data-bs-toggle="modal" data-bs-target="#pagamentoVenda">
                             <i class="fas fa-check-circle"></i> Finalizar Venda
                         </button>
                         <button class="btn-cancel">
@@ -168,7 +219,6 @@
             </aside>
         </div>
     </main>
-
     {% include "script.html" %}
     <script defer type="module" src="/js/sale.js"></script>
 </body>

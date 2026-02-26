@@ -4,6 +4,7 @@ namespace app\controller;
 
 use app\database\builder\InsertQuery;
 use app\database\builder\SelectQuery;
+use app\database\builder\UpdateQuery;
 
 class Sale extends Base
 {
@@ -59,7 +60,7 @@ class Sale extends Base
         #seleciona o id do cliente CONSUMIDOR FINAL para inserir a venda
         $id_customer = $customer['id'];
         $FieldAndValue = [
-            'id_customer' => $id_customer,
+            'id_cliente' => $id_customer,
             'total_bruto' => 0,
             'total_liquido' => 0,
             'desconto' => 0,
@@ -109,131 +110,85 @@ class Sale extends Base
             ], 500);
         }
     }
-    public function listsale($request, $response)
+    public function update($request, $response)
     {
+        $form = $request->getParsedBody();
+        $id = $form['id'] ?? null;
+        $id_cliente = $form['id_cliente'] ?? null;
+        $observacao = $form['observacao'] ?? null;
+        $quantidade = $form['quantidade'] ?? null;
+        if (is_null($id)) {
+            return $this->SendJson($response, ['status' => false, 'msg' => 'Para alterar a venda informa o código!'], 403);
+        }
+
         try {
-            #Captura todas a variaveis de forma mais segura VARIAVEIS POST.
-            $form = $request->getParsedBody();
-            
-            #Qual a coluna da tabela deve ser ordenada.
-            $order = $form['order'][0]['column'] ?? 0;
-            #Tipo de ordenação
-            $orderType = $form['order'][0]['dir'] ?? 'asc';
-            #Em qual registro se inicia o retorno dos registro, OFFSET
-            $start = $form['start'] ?? 0;
-            #Limite de registro a serem retornados do banco de dados LIMIT
-            $length = $form['length'] ?? 10;
-            
-            $fields = [
-                0 => 'id',
-                1 => 'nome_fantasia',
-                2 => 'sobrenome_razao',
-                3 => 'cpf_cnpj',
-                4 => 'rg_ie',
-                5 => 'data_nascimento_abertura'
-            ];
-            
-            #Capturamos o nome do campo a ser ordenado.
-            $orderField = $fields[$order] ?? 'id';
-            #O termo pesquisado
-            $term = $form['search']['value'] ?? '';
-            
-            $query = SelectQuery::select('id,nome_fantasia,sobrenome_razao,cpf_cnpj,rg_ie,data_nascimento_abertura')->from('company');
-            
-            $queryTotal = SelectQuery::select('COUNT(*) as total')->from('company');
-            $totalRecords = $queryTotal->fetch()['total'] ?? 0;
-            
-            if (!is_null($term) && ($term !== '')) {
-                $query->where('company.nome_fantasia', 'ilike', "%{$term}%", 'or')
-                    ->where('company.sobrenome_razao', 'ilike', "%{$term}%", 'or')
-                    ->where('company.cpf_cnpj', 'ilike', "%{$term}%", 'or')
-                    ->where('company.rg_ie', 'ilike', "%{$term}%")
-                    ->where('company.data_nascimento_abertura', 'ilike', "%{$term}%");
+            $total_venda = SelectQuery::select("sum(total_liquido) as total_liquido,sum(total_bruto) as total_bruto")
+                ->from('item_sale')
+                ->where('id_venda', '=', $id)
+                ->fetch();
 
-                $queryFiltered = SelectQuery::select('COUNT(*) as total')->from('company')
-                    ->where('company.nome_fantasia', 'ilike', "%{$term}%", 'or')
-                    ->where('company.sobrenome_razao', 'ilike', "%{$term}%", 'or')
-                    ->where('company.cpf_cnpj', 'ilike', "%{$term}%", 'or')
-                    ->where('company.rg_ie', 'ilike', "%{$term}%")
-                    ->where('company.data_nascimento_abertura', 'ilike', "%{$term}%");
-                $totalFiltered = $queryFiltered->fetch()['total'] ?? 0;
-            } else {
-                $totalFiltered = $totalRecords;
+            $FieldAndValues = [
+                'total_bruto' => $total_venda['total_bruto'],
+                'total_liquido' => $total_venda['total_liquido']
+            ];
+            #Alteramos o código do cliente
+            if (!is_null($id_cliente)) {
+                $FieldAndValues['id_cliente'] = $id_cliente;
             }
-
-            $users = $query
-                ->order($orderField, $orderType)
-                ->limit($length, $start)
-                ->fetchAll();
-            
-            $userData = [];
-            foreach ($users as $key => $value) {
-                $userData[$key] = [
-                    $value['id'],
-                    $value['nome_fantasia'],
-                    $value['sobrenome_razao'],
-                    $value['cpf_cnpj'],
-                    $value['rg_ie'],
-                    $value['data_nascimento_abertura'],
-                    "<a href='/empresa/alterar/{$value['id']}' class='btn btn-warning'>Editar</a>
-                    <button type='button'  onclick='Delete(" . $value['id'] . ");' class='btn btn-danger'>Excluir</button>"
-                ];
+            #Alteramos a observação
+            if (!is_null($observacao)) {
+                $FieldAndValues['observacao'] = $observacao;
             }
-            
-            $data = [
-                'draw' => $form['draw'] ?? 1,
-                'recordsTotal' => $totalRecords,
-                'recordsFiltered' => $totalFiltered,
-                'data' => $userData
-            ];
-            
-            $payload = json_encode($data);
-            $response->getBody()->write($payload);
-
-            return $response
-                ->withHeader('Content-Type', 'application/json')
-                ->withStatus(200);
-        } catch (\Throwable $th) {
-            $data = [
-                'draw' => $form['draw'] ?? 1,
-                'recordsTotal' => 0,
-                'recordsFiltered' => 0,
-                'data' => [],
-                'error' => $th->getMessage()
-            ];
-            $response->getBody()->write(json_encode($data));
-            return $response
-                ->withHeader('Content-Type', 'application/json')
-                ->withStatus(200);
+            if (!is_null($quantidade)) {
+                $FieldAndValues['quantidade'] = $quantidade;
+            }
+            $isUpdated = UpdateQuery::table('sale')->set($FieldAndValues)->update();
+            if (!$isUpdated) {
+                return $this->SendJson($response, ['status' => false, 'msg' => 'Restrição: ' . $isUpdated, 'id' => 0], 500);
+            }
+            return $this->SendJson($response, [
+                'status' => true,
+                'msg' => 'Atualização realizada com sucesso!',
+                'id' => $id,
+                'data' => $total_venda
+            ]);
+        } catch (\Exception $e) {
+            return $this->SendJson($response, ['status' => false, 'msg' => 'Restrição: ' . $e->getMessage(), 'id' => 0], 500);
         }
     }
     public function alterar($request, $response, $args)
     {
         $id = $args['id'];
-        $sale = SelectQuery::select()
-            ->from('sale')
-            ->where('id', '=', $id)
-            ->fetch();
-        if (!$sale) {
-            return header('Location: /venda/lista');
-            die;
+        try {
+            $sale = SelectQuery::select()
+                ->from('sale')
+                ->where('id', '=', $id)
+                ->fetch();
+            if (!$sale) {
+                return header('Location: /venda/lista');
+                die;
+            }
+            $dadosTemplate = [
+                'titulo' => 'Página inicial',
+                'acao' => 'e',
+                'id' => $id,
+                'sale' => $sale
+            ];
+            return $this->getTwig()
+                ->render($response, $this->setView('sale'), $dadosTemplate)
+                ->withHeader('Content-Type', 'text/html')
+                ->withStatus(200);
+        } catch (\Exception $e) {
+            var_dump($e->getMessage());
         }
-        $dadosTemplate = [
-            'titulo' => 'Página inicial',
-            'acao' => 'e',
-            'id' => $id,
-            'sale' => $sale
-        ];
-        return $this->getTwig()
-            ->render($response, $this->setView('sale'), $dadosTemplate)
-            ->WithHeader('Content-Type', 'text/html')
-            ->WithStatus(200);
     }
-    public function InsertItemSale($request, $response)
+    public function insertitem($request, $response)
     {
+        #captura os dados do formulário
         $form = $request->getParsedBody();
         $id = $form['id'] ?? null;
         $id_produto = $form['pesquisa'];
+        #Verificar se o id da venda esta vasio ou nulo
         if (empty($id) or is_null($id)) {
             return $this->SendJson($response, [
                 'status' => false,
@@ -241,13 +196,21 @@ class Sale extends Base
                 'id' => 0
             ], 403);
         }
-
+        #Verificar se o id do produto esta vasio ou nulo
+        if (empty($id_produto) or is_null($id_produto)) {
+            return $this->SendJson($response, [
+                'status' => false,
+                'msg' => 'Restrição: O ID do produto é obrigatório!',
+                'id' => 0
+            ], 403);
+        }
         try {
+            #Selecionamos o produto que esta sendo vendido
             $produto = SelectQuery::select()->from('product')->where('id', '=', $id_produto)->fetch();
             if (!$produto) {
                 return $this->SendJson($response, [
                     'status' => false,
-                    'msg' => 'Restrição: Produto não encontrado!',
+                    'msg' => 'Restrição: Nenhum produto localizado!',
                     'id' => 0
                 ], 403);
             }
@@ -261,7 +224,19 @@ class Sale extends Base
                 'acrescimo' => 0,
                 'nome' => $produto['nome'],
             ];
-            return $this->SendJson($FieldAndValue);
+            $isInserted = InsertQuery::table('item_sale')->save($FieldAndValue);
+            if (!$isInserted) {
+                return $this->SendJson($response, [
+                    'status' => false,
+                    'msg' => 'Restrição: ' . $isInserted,
+                    'id' => 0
+                ], 500);
+            }
+            return $this->SendJson($response, [
+                'status' => true,
+                'msg' => 'Item inserido com sucesso!',
+                'id' => 0
+            ]);
         } catch (\Exception $e) {
             return $this->SendJson($response, [
                 'status' => false,
@@ -269,5 +244,37 @@ class Sale extends Base
                 'id' => 0
             ], 500);
         }
+    }
+    public function listitemsale($request, $response)
+    {
+        $form = $request->getParsedBody();
+        $id = $form['id'] ?? null;
+        #Verificar se o id da venda esta vasio ou nulo
+        if (empty($id) or is_null($id)) {
+            return $this->SendJson($response, [
+                'status' => false,
+                'msg' => 'Restrição: O ID da venda é obrigatório!',
+                'id' => 0
+            ], 403);
+        }
+
+        $total_venda = SelectQuery::select("sum(total_liquido) as total_liquido,sum(total_bruto) as total_bruto")
+            ->from('item_sale')
+            ->where('id_venda', '=', $id)
+            ->fetch();
+
+        $items = SelectQuery::select('id,nome,total_liquido')
+            ->from('item_sale')
+            ->where('id_venda', '=', $id)
+            ->fetchAll();
+
+        $data = [
+            'status' => true,
+            'id' => $id,
+            'msg' => 'Dados listados com sucesso!',
+            'sale' => $total_venda,
+            'data' => $items
+        ];
+        return $this->SendJson($response, $data);
     }
 }

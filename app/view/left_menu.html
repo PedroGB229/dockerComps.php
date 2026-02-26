@@ -1,81 +1,78 @@
 <aside class="app-sidebar bg-body-secondary shadow" data-bs-theme="dark">
     <div class="sidebar-brand">
-        <a href="./index.html" class="brand-link">
-            <img src="./assets/img/AdminLTELogo.png" alt="AdminLTE Logo" class="brand-image opacity-75 shadow" />
-            <span class="brand-text fw-light">Minha empresa</span>
+        <a href="/home" class="brand-link">
+            <i class="bi bi-water fa-xl text-primary me-2"></i> <span class="brand-text fw-bold">Baleia</span>
         </a>
     </div>
+
     <div class="sidebar-wrapper">
         <nav class="mt-2">
             <ul class="nav sidebar-menu flex-column" data-lte-toggle="treeview" role="navigation"
                 aria-label="Main navigation" data-accordion="false" id="navigation">
-                <li class="nav-item">
-                    <a href="#" class="nav-link">
-                        <i class="bi bi-plus"></i>
+
+                <li class="nav-item menu-open"> <a href="#" class="nav-link active">
+                        <i class="nav-icon bi bi-plus"></i>
                         <p>
                             Cadastros
                             <i class="nav-arrow bi bi-chevron-right"></i>
+                            
                         </p>
                     </a>
                     <ul class="nav nav-treeview">
                         <li class="nav-item">
                             <a href="/usuario/lista" class="nav-link">
-                                <i class="bi bi-person-badge-fill"></i>
-                                <p>Usuário</p>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="/fornecedor/lista" class="nav-link">
-                                <i class="bi bi-bank"></i>
-                                <p>Fornecedor</p>
+                                <i class="nav-icon bi bi-person-badge"></i>
+                                <p>Usuários</p>
                             </a>
                         </li>
                         <li class="nav-item">
                             <a href="/cliente/lista" class="nav-link">
-                                <i class="bi bi-person-circle"></i>
-                                <p>Cliente</p>
+                                <i class="nav-icon bi bi-people"></i>
+                                <p>Clientes</p>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="/fornecedor/lista" class="nav-link">
+                                <i class="nav-icon bi bi-truck"></i>
+                                <p>Fornecedores</p>
                             </a>
                         </li>
                         <li class="nav-item">
                             <a href="/empresa/lista" class="nav-link">
-                                <i class="bi bi-building"></i>
-                                <p>Empresa</p>
+                                <i class="nav-icon bi bi-building"></i>
+                                <p>Empresas</p>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="/pagamento/lista" class="nav-link">
+                                <i class="fa-solid fa-sack-dollar"></i>
+                                <p>Condição de pagamento</p>
                             </a>
                         </li>
                         <li class="nav-item">
                             <a href="/produto/lista" class="nav-link">
-                                <i class="bi bi-building"></i>
-                                <p>Produto</p>
+                                <i class="fa-solid fa-basket-shopping"></i>
+                                <p>Produtos</p>
                             </a>
                         </li>
-                         <li class="nav-item">
-                            <a href="/pagamento/lista" class="nav-link">
-                                <i class="fa-solid fa-money-bill"></i>
-                                <p>Condição de pagamento</p>
+                        <li class="nav-item">
+                            <a href="#" class="nav-link">
+                                <i class="bi bi-plus"></i>
+                                <p>
+                                    Movimento estoque
+                                    <i class="nav-arrow bi bi-chevron-right"></i>
+                                </p>
                             </a>
+                            <ul class="nav nav-treeview">
+                                <li class="nav-item">
+                                    <a href="/venda/lista" class="nav-link">
+                                        <i class="bi bi-person-badge-fill"></i>
+                                        <p>Venda</p>
+                                    </a>
+                                </li>
+                            </ul>
                         </li>
                     </ul>
-                </li>
-                <li class="nav-item">
-                    <a href="#" class="nav-link">
-                        <i class="bi bi-plus"></i>
-                        <p>
-                            Movimento estoque
-                            <i class="nav-arrow bi bi-chevron-right"></i>
-                        </p>
-                    </a>
-                    <ul class="nav nav-treeview">
-                        <li class="nav-item">
-                            <a href="/venda/lista" class="nav-link">
-                                <i class="bi bi-person-badge-fill"></i>
-                                <p>Venda</p>
-                            </a>
-                        </li>
-                      </a>
-                </li>
-            </ul>
-        </li>
-     </ul>
-</nav>
-</div>
+        </nav>
+    </div>
 </aside>
